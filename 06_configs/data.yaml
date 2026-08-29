@@ -1,0 +1,25 @@
+task: obb
+
+nc: 17
+names:        
+# --- instructive ---
+- arrow       # arrow (start, end, direction of work)
+- loop        # work in {front/back} loop only
+- jb          # joining bar
+# --- primitive ---
+- ch          # chain                 | phenotypes: 0.75 oval, 0.25 circle
+- slst        # slip stitch           | phenotypes: 0.85 circle, 0.15 oval
+- sc          # single crochet        | angle invariant
+- hdc         # half double crochet   | ratio (bar:stem): 1:2, 1:3, 1:4
+- dc          # double crochet        | ratio (bar:stem): 1:2, 1:3, 1:4
+- tr          # treble crochet        | ratio (bar:stem): 1:2, 1:3, 1:4
+- dtr         # double treble crochet | ratio (bar:stem): 1:2, 1:3, 1:4
+# --- compound  --- 
+- ring        # domains:                                                    type (magic, chain)    | phenotypes: diameter
+- together    # domains: count (2+); stitch (sc, hdc, dc, tr, dtr) 
+- increase    # domains: count (2+); stitch (sc, hdc, dc, tr, dtr); chain?                         | phenotypes: angle of separation
+# - decrease    # domains: count (2+); stitch (sc, hdc, dc, tr, dtr)                                 | phenotypes: angle of separation
+- post        # domains:             stitch (sc, hdc, dc, tr, dtr);       ; type (front, back);    | phenotypes: hook, J-shape
+- crossed     # domains:             stitch (sc, hdc, dc, tr, dtr); chain?
+- rounded     # domains: count (3+); stitch (sc, hdc, dc, tr, dtr); chain?; type (cluster, popcorn);
+- ch3picot    # chain 3 picot
