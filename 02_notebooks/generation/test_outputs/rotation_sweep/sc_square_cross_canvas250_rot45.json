@@ -1,0 +1,37 @@
+{
+  "class_name": "sc",
+  "phenotype": "square_symmetric_cross",
+  "canvas_px": 250,
+  "target_visible_px": 150.0,
+  "estimated_visible_width_px": 150.0,
+  "estimated_visible_height_px": 150.0,
+  "viewbox": [
+    0,
+    0,
+    100,
+    100
+  ],
+  "rotation_deg": 45.0,
+  "stroke_width_normalized": 4.0,
+  "geometry": {
+    "horizontal_arm": {
+      "x1": 22,
+      "y1": 50,
+      "x2": 78,
+      "y2": 50
+    },
+    "vertical_arm": {
+      "x1": 50,
+      "y1": 22,
+      "x2": 50,
+      "y2": 78
+    },
+    "approx_visible_bounds_normalized": [
+      20,
+      20,
+      80,
+      80
+    ]
+  },
+  "inferred_canvas_for_target_px": 250
+}
