@@ -3,6 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import cv2
+import numpy as np
+
 from pathlib import Path
 from xml.etree.ElementTree import Element, SubElement, tostring
 
@@ -16,17 +19,24 @@ def make_square_sc_svg(
   target_visible_px: float = 15.0,
   rotation_deg: float = 0.0,
   stroke_width_normalized: float = 4.0,
+  class_id: int = 0,
   output_path: Path | None = None,
 ) -> dict:
   """
-  Generate a square-form single-crochet symbol as a symmetric cross.
+  Generate a square-form single-crochet symbol.
 
-  Geometry is authored in normalized coordinates:
-      viewBox = 0 0 100 100
+  The visual symbol may be rotated, but because this phenotype is
+  symmetric/square-like, its OBB label uses a canonical angle of 0 degrees.
 
-  The visible cross is centered at (50, 50).
-  Its visible geometry is approximately target_visible_px wide/high
-  when rendered onto canvas_px x canvas_px.
+  Writes:
+    - SVG
+    - JSON metadata
+    - YOLO OBB TXT label
+
+  Assumes these helpers already exist:
+    make_sc_obb()
+    normalize_obb()
+    format_yolo_obb_label()
   """
 
   if canvas_px <= 0:
@@ -35,25 +45,16 @@ def make_square_sc_svg(
   if target_visible_px <= 0:
     raise ValueError("target_visible_px must be positive")
 
-  # The visible geometry before stroke expansion is 60 normalized units:
-  #
-  # horizontal line: x=22..78
-  # vertical line:   y=22..78
-  #
-  # With stroke width 4 normalized units, the approximate visible bounds
-  # become x/y = 20..80, i.e. 60 normalized units.
+  if not 0 <= class_id:
+    raise ValueError("class_id must be non-negative")
+
+  # The cross occupies approximately normalized coordinates 20..80,
+  # giving an approximately 60/100 fraction of the SVG canvas.
   visible_span_normalized = 60.0
 
-  # Since the SVG viewBox spans 100 units, this gives:
-  #
-  # visible_px = canvas_px * 60 / 100
-  #
-  # To hit target_visible_px, choose a canvas size accordingly.
-  scale_from_normalized = target_visible_px / visible_span_normalized
-  inferred_canvas_px = int(round(100 * scale_from_normalized))
-
-  # Use the requested canvas size, but record the actual resulting estimate.
-  actual_visible_px = canvas_px * visible_span_normalized / 100.0
+  estimated_visible_px = (
+    canvas_px * visible_span_normalized / 100.0
+  )
 
   svg = Element(
     "svg",
@@ -74,11 +75,12 @@ def make_square_sc_svg(
       "stroke-width": str(stroke_width_normalized),
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
+      # This rotates the visible symbol only.
       "transform": f"rotate({rotation_deg} 50 50)",
     },
   )
 
-  # Symmetric horizontal arm.
+  # Horizontal arm.
   SubElement(
     group,
     "line",
@@ -90,7 +92,7 @@ def make_square_sc_svg(
     },
   )
 
-  # Symmetric vertical arm.
+  # Vertical arm.
   SubElement(
     group,
     "line",
@@ -102,18 +104,64 @@ def make_square_sc_svg(
     },
   )
 
-  svg_text = tostring(svg, encoding="unicode")
+  svg_text = tostring(
+    svg,
+    encoding="unicode",
+  )
+
+  if output_path is not None:
+    output_path.parent.mkdir(
+      parents=True,
+      exist_ok=True,
+    )
+
+  # For this symmetric square phenotype, use a canonical OBB.
+  #
+  # Important:
+  # - visual_rotation_deg describes the rendered symbol
+  # - obb_angle_deg remains 0 because OBB orientation is not meaningful
+  obb_angle_deg = 0.0
+
+  obb_pixels = make_sc_obb(
+    canvas_px=canvas_px,
+    rotation_deg=obb_angle_deg,
+  )
+
+  obb_normalized = normalize_obb(
+    obb_pixels,
+    width_px=canvas_px,
+    height_px=canvas_px,
+  )
+
+  yolo_label = format_yolo_obb_label(
+    class_id=class_id,
+    obb_pixels=obb_pixels,
+    width_px=canvas_px,
+    height_px=canvas_px,
+  )
 
   metadata = {
+    "class_id": class_id,
     "class_name": "sc",
     "phenotype": "square_symmetric_cross",
-    "canvas_px": canvas_px,
+
+    "canvas": {
+      "width_px": canvas_px,
+      "height_px": canvas_px,
+    },
+
     "target_visible_px": target_visible_px,
-    "estimated_visible_width_px": actual_visible_px,
-    "estimated_visible_height_px": actual_visible_px,
+    "estimated_visible_width_px": estimated_visible_px,
+    "estimated_visible_height_px": estimated_visible_px,
+
     "viewbox": [0, 0, 100, 100],
-    "rotation_deg": rotation_deg,
+
+    "visual_rotation_deg": rotation_deg,
+    "obb_angle_deg": obb_angle_deg,
+    "orientation_policy": "canonical",
+
     "stroke_width_normalized": stroke_width_normalized,
+
     "geometry": {
       "horizontal_arm": {
         "x1": 22,
@@ -127,26 +175,49 @@ def make_square_sc_svg(
         "x2": 50,
         "y2": 78,
       },
-      "approx_visible_bounds_normalized": [20, 20, 80, 80],
+      "approx_visible_bounds_normalized": [
+        20,
+        20,
+        80,
+        80,
+      ],
     },
-    "inferred_canvas_for_target_px": inferred_canvas_px,
+
+    "obb": {
+      "pixels": obb_pixels.tolist(),
+      "normalized": obb_normalized.tolist(),
+      "yolo_label": yolo_label,
+    },
   }
 
   if output_path is not None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(svg_text, encoding="utf-8")
+    # SVG
+    output_path.write_text(
+      svg_text,
+      encoding="utf-8",
+    )
 
+    # JSON metadata
     metadata_path = output_path.with_suffix(".json")
     metadata_path.write_text(
       json.dumps(metadata, indent=2),
       encoding="utf-8",
     )
 
+    # YOLO OBB label
+    label_path = output_path.with_suffix(".txt")
+    label_path.write_text(
+      yolo_label + "\n",
+      encoding="utf-8",
+    )
+
   return {
     "svg": svg_text,
     "metadata": metadata,
+    "obb_pixels": obb_pixels,
+    "obb_normalized": obb_normalized,
+    "yolo_label": yolo_label,
   }
-
 
 def render_png(svg_text: str, output_path: Path) -> None:
   try:
@@ -174,6 +245,30 @@ def render_png(svg_text: str, output_path: Path) -> None:
     raise RuntimeError(
       f"CairoSVG returned without creating {output_path}"
     )
+
+
+def rotate_points(
+  points: np.ndarray,
+  angle_deg: float,
+  center: tuple[float, float],
+) -> np.ndarray:
+  """
+  Rotate Nx2 points around center by angle_deg.
+  """
+
+  angle_rad = math.radians(angle_deg)
+
+  rotation = np.array([
+    [math.cos(angle_rad), -math.sin(angle_rad)],
+    [math.sin(angle_rad), math.cos(angle_rad)],
+  ])
+
+  center_array = np.asarray(center, dtype=np.float32)
+
+  return (
+    (points - center_array) @ rotation.T
+    + center_array
+  )
 
 
 def main() -> None:
@@ -244,6 +339,123 @@ def main() -> None:
     "png_path": str(png_path) if rendered else None,
     "metadata": result["metadata"],
   }, indent=2))
+
+
+def make_sc_obb(
+  *,
+  canvas_px: int,
+  rotation_deg: float,
+  ) -> np.ndarray:
+  """
+  Return four OBB corners in pixel coordinates.
+
+  Corner order:
+    top-left, top-right, bottom-right, bottom-left
+    before rotation, then rotated around center.
+  """
+
+  # Approximate visible geometry including stroke expansion.
+  corners = np.array([
+    [20.0, 20.0],
+    [80.0, 20.0],
+    [80.0, 80.0],
+    [20.0, 80.0],
+  ], dtype=np.float32)
+
+  center = (50.0, 50.0)
+
+  rotated = rotate_points(
+    corners,
+    angle_deg=rotation_deg,
+    center=center,
+  )
+
+  rotated *= canvas_px / 100.0
+
+  return rotated
+
+
+def normalize_obb(
+  obb_pixels: np.ndarray,
+  width_px: int,
+  height_px: int,
+) -> np.ndarray:
+  normalized = obb_pixels.copy()
+
+  normalized[:, 0] /= width_px
+  normalized[:, 1] /= height_px
+
+  return normalized
+
+
+def format_yolo_obb_label(
+  class_id: int,
+  obb_pixels: np.ndarray,
+  width_px: int,
+  height_px: int,
+) -> str:
+  normalized = normalize_obb(
+    obb_pixels,
+    width_px,
+    height_px,
+  )
+
+  values = [class_id, *normalized.reshape(-1).tolist()]
+
+  return " ".join(
+    f"{value:.8f}" if index > 0 else str(value)
+    for index, value in enumerate(values)
+  )
+
+
+def draw_obb_overlay(
+  image_path: Path,
+  obb_pixels: np.ndarray,
+  output_path: Path,
+  color: tuple[int, int, int] = (0, 0, 255),
+) -> None:
+  image = cv2.imread(str(image_path))
+
+  if image is None:
+    raise FileNotFoundError(image_path)
+
+  points = np.round(obb_pixels).astype(np.int32)
+  points = points.reshape((-1, 1, 2))
+
+  cv2.polylines(
+    image,
+    [points],
+    isClosed=True,
+    color=color,
+    thickness=1,
+    lineType=cv2.LINE_AA,
+  )
+
+  # Draw corner indices for debugging.
+  for index, point in enumerate(obb_pixels):
+    x, y = np.round(point).astype(int)
+
+    cv2.circle(
+      image,
+      (x, y),
+      radius=2,
+      color=(255, 0, 0),
+      thickness=-1,
+    )
+
+    cv2.putText(
+      image,
+      str(index),
+      (x + 3, y - 3),
+      cv2.FONT_HERSHEY_SIMPLEX,
+      0.35,
+      (255, 0, 0),
+      1,
+      cv2.LINE_AA,
+    )
+
+  output_path.parent.mkdir(parents=True, exist_ok=True)
+  cv2.imwrite(str(output_path), image)
 
 
 if __name__ == "__main__":
