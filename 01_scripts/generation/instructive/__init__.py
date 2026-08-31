@@ -1,0 +1,1 @@
+"""Instructive crochet symbol generators."""

@@ -1,0 +1,1 @@
+# write SVG/JSON/TXT, output paths/stems
