@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any, Mapping
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 import numpy as np
@@ -48,7 +49,7 @@ def _build_sc_svg(config: GenerationConfig) -> str:
   return tostring(svg, encoding="unicode")
 
 
-def generate_sc(config: GenerationConfig | None = None) -> GeneratedObject:
+def generate_sc(config: GenerationConfig | None = None, sampled_parameters: Mapping[str, Any] | None = None) -> GeneratedObject:
   config = config or GenerationConfig()
   svg = _build_sc_svg(config)
   # SC is orientation-invariant for labeling purposes.
@@ -81,6 +82,7 @@ def generate_sc(config: GenerationConfig | None = None) -> GeneratedObject:
       "yolo_label": yolo_label,
     },
   }
+  sampled_parameters = dict(sampled_parameters or {})
   return GeneratedObject(
     class_id=CLASS_ID,
     class_name=CLASS_NAME,
@@ -90,4 +92,5 @@ def generate_sc(config: GenerationConfig | None = None) -> GeneratedObject:
     obb_pixels=obb_pixels,
     obb_normalized=obb_normalized,
     yolo_label=yolo_label,
+    sampled_parameters=sampled_parameters,
   )

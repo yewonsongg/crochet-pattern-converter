@@ -17,6 +17,36 @@ class GenerationConfig:
   stroke_width_normalized: float = 4.0
 
 
+@dataclass(frozen=True)
+class ConfigIdentity:
+  path: str
+  content_hash: str
+  schema_version: Any
+
+
+@dataclass(frozen=True)
+class SamplingProvenance:
+  config: ConfigIdentity
+  class_group: str
+  class_name: str
+  seed: int | None = None
+  decisions: dict[str, Any] = field(default_factory=dict)
+  parameters: dict[str, Any] = field(default_factory=dict)
+  derived: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class SampledParameters:
+  parameters: dict[str, Any]
+  derived: dict[str, Any] = field(default_factory=dict)
+  topology: dict[str, Any] = field(default_factory=dict)
+  components: dict[str, Any] = field(default_factory=dict)
+  provenance: SamplingProvenance | None = None
+
+  def as_dict(self) -> dict[str, Any]:
+    return {**self.parameters, **self.derived}
+
+
 @dataclass
 class GeneratedObject:
   """In-memory generated object for notebooks and scene orchestration.
@@ -34,6 +64,8 @@ class GeneratedObject:
   obb_pixels: np.ndarray
   obb_normalized: np.ndarray
   yolo_label: str
+  sampled_parameters: dict[str, Any] = field(default_factory=dict)
+  sampling_provenance: SamplingProvenance | None = None
   svg_path: Path | None = None
   png_path: Path | None = None
   metadata_path: Path | None = None
