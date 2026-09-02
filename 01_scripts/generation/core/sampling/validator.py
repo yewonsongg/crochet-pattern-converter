@@ -9,17 +9,17 @@ class SamplingValidationError(ValueError):
 SUPPORTED_DISTRIBUTIONS = {"categorical", "truncated_normal", "fixed", "conditional", "mixture", "derived"}
 
 
-def validate_sampling_config(raw: Any) -> None:
+def validate_sampling(parsed_source: Any) -> Any:
   """
   
   """
 
-  if not isinstance(raw, dict):
+  if not isinstance(parsed_source, dict):
     raise SamplingValidationError("Sampling config root must be a mapping")
-  if not isinstance(raw.get("schema"), dict):
+  if not isinstance(parsed_source.get("schema"), dict):
     raise SamplingValidationError("Missing schema mapping")
   
-  classes = raw.get("classes")
+  classes = parsed_source.get("classes")
   if not isinstance(classes, dict):
     raise SamplingValidationError("Missing classes mapping")
   
@@ -30,6 +30,14 @@ def validate_sampling_config(raw: Any) -> None:
     
     for name, spec in group.items():
       _class(spec, f"classes.{group_name}.{name}", known)
+
+
+def validate_ontology(parsed_source: Any) -> Any:
+  print("Hello World")
+
+
+def validate_ontology_sampling_agreement(ontology: Any, sampling: Any) -> Any:
+  print("Hello World")
 
 
 def _class(spec, path, known):
@@ -82,6 +90,7 @@ def _class(spec, path, known):
   connector = topology.get("connector") if isinstance(topology, dict) else None
   if isinstance(connector, dict) and connector.get("enabled") is False and "distribution" in connector:
     raise SamplingValidationError(f"{path}.topology.connector cannot have distribution when disabled")
+  
   if isinstance(connector, dict) and connector.get("enabled") and connector.get("distribution"):
     _distribution(connector["distribution"], f"{path}.topology.connector.distribution", params)
 

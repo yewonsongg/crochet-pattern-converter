@@ -23,19 +23,25 @@ def config_source(path: Path, raw: Any) -> tuple[str, str]:
   return str(path.resolve()), config_hash(raw)
 
 
-def create_config_identity(path: Path, raw: Any, schema_version: Any) -> ConfigIdentity:
+def create_config_identity(
+  ontology_path: Path, 
+  sampling_path: Path,
+  ontology_config: Any,
+  sampling_config: Any, 
+  schema_version: Any
+) -> ConfigIdentity:
   """
   Authors the `ConfigIdentity` record for config provenance from resolved path, hash, and schema version.
 
   Returns `ConfigIdentity`.
   """
 
-  resolved, digest = config_source(path, raw)
+  resolved, digest = config_source(sampling_path, sampling_config)
   return ConfigIdentity(resolved, digest, schema_version)
 
 
 def create_sampling_provenance(
-  config: ConfigIdentity, 
+  config_identity: ConfigIdentity, 
   class_group: str, 
   class_name: str, 
   seed: int | None, 
@@ -49,4 +55,4 @@ def create_sampling_provenance(
   Returns `SamplingProvenance`.
   """
 
-  return SamplingProvenance(config, class_group, class_name, seed, decisions, parameters, derived)
+  return SamplingProvenance(config_identity, class_group, class_name, seed, decisions, parameters, derived)

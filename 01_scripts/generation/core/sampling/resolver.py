@@ -13,14 +13,14 @@ class SamplingResult:
   components: dict[str, Any]
   decisions: dict[str, Any]
 
-def resolve_class_spec(raw: Mapping[str, Any], group: str, name: str) -> ClassSpec:
+def resolve_class_spec(sampling_config: Mapping[str, Any], class_group: str, class_name: str) -> ClassSpec:
   try:
-    source = raw["classes"][group][name]
+    source = sampling_config["classes"][class_group][class_name]
   except KeyError as exc:
-    raise KeyError(f"Unknown class: {group}.{name}") from exc
+    raise KeyError(f"Unknown class: {class_group}.{class_name}") from exc
   params = {k: ParameterSpec(k, v["kind"], v["distribution"]) for k, v in source.get("parameters", {}).items() if "distribution" in v}
   components = {k: ComponentSpec(k, v) for k, v in source.get("components", {}).items()}
-  return ClassSpec(group, name, params, source.get("variants", {}), TopologySpec(source.get("topology", {})), components, source)
+  return ClassSpec(class_group, class_name, params, source.get("variants", {}), TopologySpec(source.get("topology", {})), components, source)
 
 
 build_class_spec = resolve_class_spec

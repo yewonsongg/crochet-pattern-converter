@@ -1,5 +1,8 @@
 """Loading, validation, and sampling of declarative specifications."""
 
-from .loader import SamplingConfig, load_sampling_config
+from .config import ClassSampler, SamplingConfig
+from .loader import load_sampling_config
+from .schema import ClassSpec
+from ..models import SampledParameters, SamplingProvenance
 
-__all__ = ["SamplingConfig", "load_sampling_config"]
+__all__ = ["ClassSampler", "ClassSpec", "SampledParameters", "SamplingConfig", "SamplingProvenance", "load_sampling_config"]
