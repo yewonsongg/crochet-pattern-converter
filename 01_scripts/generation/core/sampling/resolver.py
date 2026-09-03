@@ -1,80 +1,267 @@
-from dataclasses import dataclass
 from typing import Any, Mapping
+
 import numpy as np
+
+from ..models import SamplingResult
 from .distributions import sample_distribution
 from .schema import ClassSpec, ComponentSpec, ParameterSpec, TopologySpec
 
 
-@dataclass(frozen=True)
-class SamplingResult:
-  parameters: dict[str, Any]
-  derived: dict[str, Any]
-  topology: dict[str, Any]
-  components: dict[str, Any]
-  decisions: dict[str, Any]
+def resolve_class_spec(
+  sampling_config: Mapping[str, Any], 
+  class_group: str, 
+  class_name: str, 
+  ontology_config: Mapping[str, Any] | None = None
+) -> ClassSpec:
+  """Resolve one class specification from validated configuration mappings.
 
-def resolve_class_spec(sampling_config: Mapping[str, Any], class_group: str, class_name: str, ontology_config: Mapping[str, Any] | None = None) -> ClassSpec:
+  Converts the raw sampling declarationf or one class into a :class:`ClassSpec` containing parameter, component, and topology specifications.
+
+  If an ontology configuration is supplied, the matching ontology entry is required and its class ID is added tot he resolved class's raw metadata.
+
+  Args:
+    sampling_config: Validated symbol-sampling configuration.
+    class_group: Sampling/ontology group containing the class.
+    class_name: Name of the class to resolve.
+    ontology_config: Optional validated ontology configuration.
+
+  Returns:
+    :class:`ClassSpec`: The resolved class specification
+  
+  Raises:
+    KeyError: If the class is absent from the sampling configuration, or if ``ontology_config`` is supplied and does not contain the class.
+    TypeError: If validated mappings do not have the expected structure.
+  """
+
   try:
-    source = sampling_config["classes"][class_group][class_name]
+    classes = sampling_config["classes"]
+    group = classes[class_group]
+    source = group[class_name]
   except KeyError as exc:
-    raise KeyError(f"Unknown class: {class_group}.{class_name}") from exc
-  ontology_entry = None
+    raise KeyError(f"Unknown class: {class_group}.{class_name} .") from exc
+  
+  ontology_entry: Mapping[str, Any] | None = None
+
   if ontology_config is not None:
-    ontology_entry = next((entry for entry in ontology_config["classes"] if entry["family"] == class_group and entry["name"] == class_name), None)
+    try:
+      ontology_classes = ontology_config["classes"]
+    except KeyError as exc:
+      raise KeyError("Ontology configuration is missing 'classes'.") from exc
+
+    ontology_entry = next((
+      entry 
+      for entry in ontology_classes 
+      if (
+        entry["family"] == class_group 
+        and entry["name"] == class_name
+      )), None)
+    
     if ontology_entry is None:
-      raise KeyError(f"Class is absent from ontology: {class_group}.{class_name}")
-  params = {
-    k: ParameterSpec(
-      k,
-      v["kind"],
-      v.get("distribution", {"type": "derived", **{key: item for key, item in v.items() if key != "kind"}}),
+      raise KeyError(f"Class is absent from ontology: {class_group}.{class_name} .")
+
+  raw_parameters = source.get("parameters", {})
+  if not isinstance(raw_parameters, Mapping):
+    raise TypeError(f"{class_group}.{class_name}.parameters must be a mapping.")
+
+  parameters: dict[str, ParameterSpec] = {}
+  for parameter_name, parameter in raw_parameters.items():
+    if not isinstance(parameter, Mapping):
+      raise TypeError(f"{class_group}.{class_name}.parameters.{parameter_name} must be a mapping.")
+
+    kind = parameter["kind"]
+    if "distribution" in parameter:
+      distribution = parameter["distribution"]
+    elif kind == "derived":
+      distribution = {
+        "type": "derived",
+        **{
+          key: value
+          for key, value in parameter.items()
+          if key != "kind"
+        },
+      }
+    else:
+      continue
+
+    parameters[parameter_name] = ParameterSpec(
+      name = parameter_name,
+      kind = kind,
+      distribution = distribution,
     )
-    for k, v in source.get("parameters", {}).items()
-    if "distribution" in v or v.get("kind") == "derived"
+
+  raw_components = source.get("components", {})
+  if not isinstance(raw_components, Mapping):
+    raise TypeError(f"{class_group}.{class_name}.components must be a mapping.")
+
+  components = {
+    component_name: ComponentSpec(
+      component_name,
+      component_spec,
+    )
+    for component_name, component_spec in raw_components.items()
   }
-  components = {k: ComponentSpec(k, v) for k, v in source.get("components", {}).items()}
-  raw = {**source}
+
+  raw = dict(source)
+
   if ontology_entry is not None:
     raw["class_id"] = ontology_entry["id"]
-  return ClassSpec(class_group, class_name, params, source.get("variants", {}), TopologySpec(source.get("topology", {})), components, raw)
+  
+  return ClassSpec(
+    class_group = class_group,
+    class_name = class_name,
+    parameters = parameters,
+    variants = source.get("variants", {}),
+    topology = TopologySpec(
+      source.get("topology", {})
+    ),
+    components = components,
+    raw = raw,
+  )
 
 
 build_class_spec = resolve_class_spec
 
-def sample_class(spec: ClassSpec, rng: np.random.Generator) -> SamplingResult:
-  values, derived, decisions = {}, {}, {}
-  active = dict(spec.parameters)
+def sample_class(
+  spec: ClassSpec, 
+  rng: np.random.Generator
+) -> SamplingResult:
+  """Sample one concrete instance from a resolved class specification.
+
+  Samples variant selections, direct parameters, derived parameters, conditional distributions, connector types, and component references. 
+  Parameter dependencies are resolved incrementally until all pending parameters have been sampled.
+
+  Args:
+    spec: Resolved class specification to sample.
+    rng: Random-number generator used for stochastic sampling.
+
+  Returns:
+    A ``SamplingResult`` containing sampled values, derived values, topology, resolved components, and sampling decisions.
+
+  Raises:
+    ValueError: If parameter dependencies cannot be resolved.
+    KeyError: If a selected variant or component declaration is malformed.
+  """
+
+  values: dict[str, Any] = {}
+  derived: dict[str, Any] = {}
+  decisions: dict[str, Any] = {}
+
+  active: dict[str, ParameterSpec] = dict(spec.parameters)
+
+  variant = None
   if "variant" in active:
-    variant = sample_distribution(active["variant"].distribution, rng, values, decisions, "variant")
+    variant_parameter = active.pop("variant")
+
+    variant = sample_distribution(
+      variant_parameter.distribution,
+      rng,
+      values,
+      decisions,
+      "variant",
+    )
+
+    if not isinstance(variant, str):
+      raise ValueError(f"Sampled variant must be a string; got {variant!r}.")
+
     values["variant"] = variant
+
     bundle = spec.variants.get(variant, {})
-    active.update({k: ParameterSpec(k, v["kind"], v["distribution"]) for k, v in bundle.get("parameters", {}).items()})
+
+    for name, raw_parameter in bundle.get("parameter", {}).items():
+      active[name] = ParameterSpec(
+        name = name,
+        kind = raw_parameter["kind"],
+        distribution = raw_parameter["distribution"],
+      )
+
   pending = dict(active)
+
   while pending:
     progressed = False
     context = {**values, **derived}
+
     for name, parameter in list(pending.items()):
-      if all(dep in context for dep in parameter.distribution.get("depends_on", [])):
-        result = sample_distribution(parameter.distribution, rng, context, decisions, name)
-        (derived if parameter.kind == "derived" else values)[name] = result
-        del pending[name]
-        progressed = True
-        context = {**values, **derived}
+      dependencies = parameter.distribution.get("depends_on", [])
+      if not all(
+        dependency in context
+        for dependency in dependencies
+      ):
+        continue
+
+      result = sample_distribution(
+        spec = parameter.distribution,
+        rng = rng,
+        values = context,
+        decisions = decisions,
+        path = name,
+      )
+
+      target = (
+        derived 
+        if parameter.kind == "derived"
+        else 
+        values
+      )
+
+      target[name] = result
+      del pending[name]
+      progressed = True
+
     if not progressed:
-      raise ValueError(f"Unresolvable sampling dependencies: {list(pending)}")
+      raise ValueError(f"Unresolvable sampling dependencies: {sorted(pending)}")
+    
   topology = dict(spec.topology.raw)
   connector = topology.get("connector", {})
-  if connector.get("enabled") and connector.get("distribution"):
-    values["connector_type"] = sample_distribution(connector["distribution"], rng, {**values, **derived}, decisions, "topology.connector")
+
+  if (
+    isinstance(connector, dict)
+    and connector.get("enabled")
+    and connector.get("distribution")
+  ):
+    values["connector_type"] = sample_distribution(
+      spec = connector["distribution"],
+      rng = rng,
+      values = {
+        **values,
+        **derived,
+      },
+      decisions = decisions,
+      path = "topology.connector",
+    )
+
   components = dict(spec.components)
-  if values.get("variant") in spec.variants:
-    components.update({k: ComponentSpec(k, v) for k, v in spec.variants[values["variant"]].get("components", {}).items()})
-  resolved_components = {}
-  context = {**values, **derived}
+
+  if variant in spec.variants:
+    variant_components = spec.variants[variant].get("components", {})
+
+    components.update({
+      name: ComponentSpec(
+        name = name,
+        raw = component,
+      )
+      for name, component in variant_components.items()
+    })
+
+  context = {
+    **values,
+    **derived,
+  }
+
+  resolved_components: dict[str, dict[str, Any]] = {}
+
   for name, component in components.items():
     item = dict(component.raw)
+
     for key, value in item.items():
       if isinstance(value, str) and value in context:
         item[key] = context[value]
+
     resolved_components[name] = item
-  return SamplingResult(values, derived, topology, resolved_components, decisions)
+
+  return SamplingResult(
+    parameters = values, 
+    derived = derived, 
+    topology = topology, 
+    components = resolved_components, 
+    decisions = decisions,
+  )

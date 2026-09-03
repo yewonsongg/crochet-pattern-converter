@@ -37,9 +37,9 @@ def main() -> None:
   )
   print_snapshot("1. loaded config", {
     "ontology_path": config.identity.ontology_path,
-    "ontology_hash": config.identity.ontology_hash,
+    "ontology_digest": config.identity.ontology_digest,
     "sampling_path": config.identity.sampling_path,
-    "sampling_hash": config.identity.sampling_hash,
+    "sampling_digest": config.identity.sampling_digest,
     "schema_version": config.sampling_config["schema"].get("version"),
   })
 
