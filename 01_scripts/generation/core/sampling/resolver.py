@@ -13,14 +13,30 @@ class SamplingResult:
   components: dict[str, Any]
   decisions: dict[str, Any]
 
-def resolve_class_spec(sampling_config: Mapping[str, Any], class_group: str, class_name: str) -> ClassSpec:
+def resolve_class_spec(sampling_config: Mapping[str, Any], class_group: str, class_name: str, ontology_config: Mapping[str, Any] | None = None) -> ClassSpec:
   try:
     source = sampling_config["classes"][class_group][class_name]
   except KeyError as exc:
     raise KeyError(f"Unknown class: {class_group}.{class_name}") from exc
-  params = {k: ParameterSpec(k, v["kind"], v["distribution"]) for k, v in source.get("parameters", {}).items() if "distribution" in v}
+  ontology_entry = None
+  if ontology_config is not None:
+    ontology_entry = next((entry for entry in ontology_config["classes"] if entry["family"] == class_group and entry["name"] == class_name), None)
+    if ontology_entry is None:
+      raise KeyError(f"Class is absent from ontology: {class_group}.{class_name}")
+  params = {
+    k: ParameterSpec(
+      k,
+      v["kind"],
+      v.get("distribution", {"type": "derived", **{key: item for key, item in v.items() if key != "kind"}}),
+    )
+    for k, v in source.get("parameters", {}).items()
+    if "distribution" in v or v.get("kind") == "derived"
+  }
   components = {k: ComponentSpec(k, v) for k, v in source.get("components", {}).items()}
-  return ClassSpec(class_group, class_name, params, source.get("variants", {}), TopologySpec(source.get("topology", {})), components, source)
+  raw = {**source}
+  if ontology_entry is not None:
+    raw["class_id"] = ontology_entry["id"]
+  return ClassSpec(class_group, class_name, params, source.get("variants", {}), TopologySpec(source.get("topology", {})), components, raw)
 
 
 build_class_spec = resolve_class_spec

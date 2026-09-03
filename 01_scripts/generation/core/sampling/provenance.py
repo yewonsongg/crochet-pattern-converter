@@ -36,8 +36,9 @@ def create_config_identity(
   Returns `ConfigIdentity`.
   """
 
-  resolved, digest = config_source(sampling_path, sampling_config)
-  return ConfigIdentity(resolved, digest, schema_version)
+  ontology_resolved, ontology_digest = config_source(ontology_path, ontology_config)
+  sampling_resolved, sampling_digest = config_source(sampling_path, sampling_config)
+  return ConfigIdentity(ontology_resolved, ontology_digest, sampling_resolved, sampling_digest, schema_version)
 
 
 def create_sampling_provenance(

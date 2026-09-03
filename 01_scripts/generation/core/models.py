@@ -19,8 +19,10 @@ class GenerationConfig:
 
 @dataclass(frozen=True)
 class ConfigIdentity:
-  path: str
-  content_hash: str
+  ontology_path: str
+  ontology_hash: str
+  sampling_path: str
+  sampling_hash: str
   schema_version: Any
 
 

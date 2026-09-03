@@ -5,7 +5,7 @@ from typing import Any
 
 from .config import SamplingConfig, CacheMode
 from .provenance import create_config_identity
-from .validator import validate_ontology, validate_sampling, validate_ontology_sampling_agreement
+from .validator import validate_ontology, validate_sampling_config, validate_ontology_sampling_agreement
 
 
 def _load_yaml(
@@ -70,7 +70,7 @@ def load_sampling_config(
   validated_ontology = validate_ontology(
     parsed_source = parsed_ontology,
   )
-  validated_sampling = validate_sampling(
+  validated_sampling = validate_sampling_config(
     parsed_source = parsed_sampling,
   )
 
@@ -91,8 +91,8 @@ def load_sampling_config(
 
   # `SamplingConfig` construction handover to `config.py`
   return SamplingConfig(
-    sampling_config = validated_sampling,
     ontology_config = validated_ontology, 
+    sampling_config = validated_sampling,
     identity = identity,
     cache_mode = cache_mode
   )

@@ -24,6 +24,7 @@ class SamplingConfig:
   The public ``specs`` and ``samplers`` properties expose read-only mapping views over their respective internal caches. In ``"lazy"`` mode, these views may contain only entries that have already been resolved or prepared.
 
   Attributes:
+    ontology_config: Parsed and validated ontology configuration mapping.
     sampling_config: Parsed and validated sampling configuration mapping.
     identity: Version and provenance information for the configuration.
 
@@ -39,8 +40,8 @@ class SamplingConfig:
     ValueError: If ``cache_mode`` is not ``"lazy"`` or ``"eager"``.  
   """
 
-  sampling_config: Mapping[str, Any]
   ontology_config: Mapping[str, Any]
+  sampling_config: Mapping[str, Any]
   identity: ConfigIdentity
 
   cache_mode: CacheMode = "lazy"
@@ -130,9 +131,10 @@ class SamplingConfig:
     # cache check, otherwise make spec
     if key not in self._spec_cache:
       self._spec_cache[key] = resolve_class_spec(
+        ontology_config = self.ontology_config,
         sampling_config = self.sampling_config, 
         class_group = class_group, 
-        class_name = class_name
+        class_name = class_name,
       )
 
     return self._spec_cache[key]

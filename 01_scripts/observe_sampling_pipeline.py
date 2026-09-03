@@ -25,16 +25,22 @@ def print_snapshot(title: str, value) -> None:
 
 
 def main() -> None:
-  config_path = PROJECT_ROOT / "06_configs" / "symbol_sampling.yaml"
+  ontology_path = PROJECT_ROOT / "06_configs" / "ontology.yaml"
+  sampling_path = PROJECT_ROOT / "06_configs" / "symbol_sampling.yaml"
   class_group = "primitive"
   class_name = "ch"
   seed = 12345
 
-  config = load_sampling_config(config_path)
+  config = load_sampling_config(
+    ontology_path=ontology_path,
+    sampling_path=sampling_path,
+  )
   print_snapshot("1. loaded config", {
-    "path": config.identity.path,
-    "content_hash": config.identity.content_hash,
-    "schema_version": config.raw["schema"].get("version"),
+    "ontology_path": config.identity.ontology_path,
+    "ontology_hash": config.identity.ontology_hash,
+    "sampling_path": config.identity.sampling_path,
+    "sampling_hash": config.identity.sampling_hash,
+    "schema_version": config.sampling_config["schema"].get("version"),
   })
 
   spec = config.resolve(class_group, class_name)
