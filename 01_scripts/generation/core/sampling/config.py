@@ -163,6 +163,14 @@ class SamplingConfig:
         config_identity = self.identity
       )
 
+    # print("VARIANTS:")
+    # for name, bundle in self._spec_cache[key].variants.items():
+    #   print(name, bundle)
+  
+    # print("\nPARAMETERS:")
+    # for name, parameter in self._spec_cache[key].parameters.items():
+    #   print(name, parameter)
+
     return self._sampler_cache[key]
 
   def prepare_specs(self) -> None:

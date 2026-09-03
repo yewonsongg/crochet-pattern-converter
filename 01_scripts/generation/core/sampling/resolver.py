@@ -8,10 +8,10 @@ from .schema import ClassSpec, ComponentSpec, ParameterSpec, TopologySpec
 
 
 def resolve_class_spec(
+  ontology_config: Mapping[str, Any],
   sampling_config: Mapping[str, Any], 
   class_group: str, 
   class_name: str, 
-  ontology_config: Mapping[str, Any] | None = None
 ) -> ClassSpec:
   """Resolve one class specification from validated configuration mappings.
 
@@ -109,6 +109,7 @@ def resolve_class_spec(
   return ClassSpec(
     class_group = class_group,
     class_name = class_name,
+    class_id = ontology_entry["id"],
     parameters = parameters,
     variants = source.get("variants", {}),
     topology = TopologySpec(
@@ -153,11 +154,11 @@ def sample_class(
     variant_parameter = active.pop("variant")
 
     variant = sample_distribution(
-      variant_parameter.distribution,
-      rng,
-      values,
-      decisions,
-      "variant",
+      spec = variant_parameter.distribution,
+      rng = rng,
+      values = values,
+      decisions = decisions,
+      path = "variant",
     )
 
     if not isinstance(variant, str):
@@ -167,12 +168,39 @@ def sample_class(
 
     bundle = spec.variants.get(variant, {})
 
-    for name, raw_parameter in bundle.get("parameter", {}).items():
+    if bundle is None:
+      raise ValueError(f"Unknown variant {variant!r} for {spec.class_group}.{spec.class_name}.")
+
+    bundle_parameters = bundle.get("parameters", {})
+
+    # print("SELECTED VARIANT:", variant)
+    # print("VARIANT BUNDLE:", bundle)
+    # print("VARIANT PARAMETERS:", bundle_parameters)
+
+    for name, raw_parameter in bundle_parameters.items():
+      if "distribution" in raw_parameter:
+        distribution = raw_parameter["distribution"]
+      elif raw_parameter.get("kind") == "derived":
+        distribution = {
+          "type": "derived",
+          **{
+            key: value
+            for key, value in raw_parameter.items()
+            if key != "kind"
+          },
+        }
+      else:
+        raise ValueError(f"Parameter {name!r} has no distribution.")
+
       active[name] = ParameterSpec(
         name = name,
         kind = raw_parameter["kind"],
-        distribution = raw_parameter["distribution"],
+        distribution = distribution,
       )
+
+  # print("ACTIVE PARAMETERS")
+  # for name, parameter in active.items():
+  #   print(name, parameter.kind, parameter.distribution,)
 
   pending = dict(active)
 
@@ -180,8 +208,14 @@ def sample_class(
     progressed = False
     context = {**values, **derived}
 
+    # print("PENDING", list(pending))
+    # print("CONTEXT", context)
+
     for name, parameter in list(pending.items()):
       dependencies = parameter.distribution.get("depends_on", [])
+
+      # print("CHECK:", name, "dependencies=", dependencies, "available=", context.keys())
+
       if not all(
         dependency in context
         for dependency in dependencies

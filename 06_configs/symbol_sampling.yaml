@@ -20,7 +20,7 @@ classes:
           kind: continuous
           distribution: 
             type: conditional
-            depends_on: shape
+            depends_on: [shape]
             cases:
               oval:
                 type: truncated_normal
@@ -49,7 +49,7 @@ classes:
           kind: continuous
           distribution: 
             type: conditional
-            depends_on: shape
+            depends_on: [shape]
             cases:
               oval:
                 type: truncated_normal
@@ -78,7 +78,7 @@ classes:
           kind: continuous
           distribution: 
             type: conditional
-            depends_on: shape
+            depends_on: [shape]
             cases:
               symmetric:
                 type: fixed
@@ -250,7 +250,7 @@ classes:
           required: false
           distribution:
             type: conditional
-            depends_on: stitch
+            depends_on: [stitch]
             cases:
               sc:
                 type: fixed
@@ -304,7 +304,7 @@ classes:
           kind: continuous
           distribution: 
             type: conditional
-            depends_on: stitch
+            depends_on: [stitch]
             cases:
               sc:
                 type: fixed
@@ -424,7 +424,7 @@ classes:
           kind: continuous
           distribution: 
             type: conditional
-            depends_on: variant
+            depends_on: [variant]
             cases:
               hook:
                 type: truncated_normal
@@ -478,7 +478,7 @@ classes:
           required: true
           distribution:
             type: conditional
-            depends_on: variant
+            depends_on: [variant]
             cases:
               cluster:
                 type: fixed
@@ -510,7 +510,7 @@ classes:
           kind: discrete
           distribution:
             type: conditional
-            depends_on: variant
+            depends_on: [variant]
             cases:
               cluster:
                 type: categorical

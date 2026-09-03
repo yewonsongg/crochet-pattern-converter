@@ -1,33 +1,33 @@
 classes:
   - name: ch
-    id: 00
+    id: 0
     family: primitive
   - name: slst
-    id: 01
+    id: 1
     family: primitive
   - name: sc
-    id: 02
+    id: 2
     family: primitive
   - name: hdc
-    id: 03
+    id: 3
     family: primitive
   - name: dc
-    id: 04
+    id: 4
     family: primitive
   - name: tr
-    id: 05
+    id: 5
     family: primitive
   - name: dtr
-    id: 06
+    id: 6
     family: primitive
   - name: together
-    id: 07
+    id: 7
     family: compound
   - name: increase
-    id: 08
+    id: 8
     family: compound
   - name: post
-    id: 09
+    id: 9
     family: compound
   - name: crossed
     id: 10

@@ -72,8 +72,15 @@ class ClassSpec:
     raw: Normalized source fragment for the class.
   """
 
+  @property
+  def class_code(self) -> str:
+    """Return the zero-padded class ID for display and filenames."""
+
+    return f"{self.class_id:02d}"
+
   class_group: str
   class_name: str
+  class_id: int
   parameters: dict[str, ParameterSpec] = field(default_factory=dict)
   variants: dict[str, dict[str, Any]] = field(default_factory=dict)
   topology: TopologySpec = field(default_factory=TopologySpec)

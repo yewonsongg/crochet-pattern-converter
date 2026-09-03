@@ -264,8 +264,8 @@ def _validate_component_references(
           if not isinstance(child, str):
             raise SamplingValidationError(f"agreement.{child_path} must be a class-name string; got {child!r}.")
 
-        if child not in known_names:
-          raise SamplingValidationError(f"agreement.{child_path} references unknown class: {child!r}.")
+          if child not in known_names:
+            raise SamplingValidationError(f"agreement.{child_path} references unknown class: {child!r}.")
         
         walk(child, child_path)
 
@@ -625,11 +625,19 @@ def _distribution(
 
   
   elif dtype == "conditional":
-    dependency = spec.get("depends_on")
+    dependencies = spec.get("depends_on")
     cases = spec.get("cases")
 
-    if not isinstance(dependency, str):
-      raise SamplingValidationError(f"{path}.depends_on must be a parameter name.")
+    if (
+      not isinstance(dependencies, list)
+      or len(dependencies) != 1
+      or not isinstance(dependencies[0], str)
+      or not dependencies[0]
+    ):
+      raise SamplingValidationError(f"{path}.depends_on must be a one-term list containing a parameter name.")
+
+    dependency = dependencies[0]
+    
     if dependency not in parameters:
       raise SamplingValidationError(f"{path}.depends_on references unknown parameter: {dependency!r}.")
     if not isinstance(cases, Mapping) or not cases:
