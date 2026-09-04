@@ -190,11 +190,18 @@ class SamplingConfig:
     class_name: str, 
     rng: np.random.Generator, 
     *, 
-    seed: int | None = None
+    seed: int | None = None,
+    overrides: Mapping[str, Any] | None = None,
+    case_id: str | None = None,
   ) -> SampledParameters:
     """Sample one instance using the cached class sampler.
 
     This is a convenience method equivalent to calling :meth:`sampler` followed by :meth:`ClassSampler.sample`.
     """
 
-    return self.sampler(class_group, class_name).sample(rng, seed=seed)
+    return self.sampler(class_group, class_name).sample(
+      rng,
+      seed=seed,
+      overrides=overrides,
+      case_id=case_id,
+    )

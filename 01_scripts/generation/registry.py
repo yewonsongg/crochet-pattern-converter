@@ -26,7 +26,7 @@ CLASS_GROUPS = {
   "instructive": [
     "ring", 
     "loop",
-    "jb"
+    "jb",
     "arrow",
   ]
 }

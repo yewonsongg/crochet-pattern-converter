@@ -1,4 +1,5 @@
 from typing import Any, Mapping
+import math
 
 import numpy as np
 
@@ -124,7 +125,8 @@ build_class_spec = resolve_class_spec
 
 def sample_class(
   spec: ClassSpec, 
-  rng: np.random.Generator
+  rng: np.random.Generator,
+  overrides: Mapping[str, Any] | None = None,
 ) -> SamplingResult:
   """Sample one concrete instance from a resolved class specification.
 
@@ -146,6 +148,14 @@ def sample_class(
   values: dict[str, Any] = {}
   derived: dict[str, Any] = {}
   decisions: dict[str, Any] = {}
+  overrides = dict(overrides or {})
+
+  allowed_names = set(spec.parameters)
+  for variant_spec in spec.variants.values():
+    allowed_names.update(variant_spec.get("parameters", {}))
+  unknown = set(overrides) - allowed_names
+  if unknown:
+    raise KeyError(f"Unknown sampling override(s) for {spec.class_group}.{spec.class_name}: {sorted(unknown)!r}.")
 
   active: dict[str, ParameterSpec] = dict(spec.parameters)
 
@@ -153,13 +163,18 @@ def sample_class(
   if "variant" in active:
     variant_parameter = active.pop("variant")
 
-    variant = sample_distribution(
-      spec = variant_parameter.distribution,
-      rng = rng,
-      values = values,
-      decisions = decisions,
-      path = "variant",
-    )
+    if "variant" in overrides:
+      variant = overrides["variant"]
+      _validate_override(variant_parameter.distribution, variant, "variant")
+      decisions["variant"] = {"source": "override", "value": variant}
+    else:
+      variant = sample_distribution(
+        spec = variant_parameter.distribution,
+        rng = rng,
+        values = values,
+        decisions = decisions,
+        path = "variant",
+      )
 
     if not isinstance(variant, str):
       raise ValueError(f"Sampled variant must be a string; got {variant!r}.")
@@ -203,6 +218,7 @@ def sample_class(
   #   print(name, parameter.kind, parameter.distribution,)
 
   pending = dict(active)
+  consumed_overrides = {"variant"} if "variant" in overrides else set()
 
   while pending:
     progressed = False
@@ -222,13 +238,23 @@ def sample_class(
       ):
         continue
 
-      result = sample_distribution(
-        spec = parameter.distribution,
-        rng = rng,
-        values = context,
-        decisions = decisions,
-        path = name,
-      )
+      if name in overrides:
+        _validate_override(
+          _override_distribution(parameter.distribution, context),
+          overrides[name],
+          name,
+        )
+        result = overrides[name]
+        decisions[name] = {"source": "override", "value": result}
+        consumed_overrides.add(name)
+      else:
+        result = sample_distribution(
+          spec = parameter.distribution,
+          rng = rng,
+          values = context,
+          decisions = decisions,
+          path = name,
+        )
 
       target = (
         derived 
@@ -261,6 +287,12 @@ def sample_class(
       },
       decisions = decisions,
       path = "topology.connector",
+    )
+
+  unused = set(overrides) - consumed_overrides
+  if unused:
+    raise ValueError(
+      f"Sampling override(s) are not active for selected variant: {sorted(unused)!r}."
     )
 
   components = dict(spec.components)
@@ -299,3 +331,59 @@ def sample_class(
     components = resolved_components, 
     decisions = decisions,
   )
+
+
+def _validate_override(distribution: Mapping[str, Any], value: Any, path: str) -> None:
+  """Validate a concrete override against a distribution's support."""
+  dtype = distribution.get("type")
+  if dtype == "derived":
+    raise ValueError(f"Cannot override derived parameter {path!r}; it is recomputed.")
+  if dtype == "categorical":
+    if value not in distribution["probabilities"]:
+      raise ValueError(f"Override {path}={value!r} is not one of the declared categorical values.")
+    return
+  if dtype == "fixed":
+    if value != distribution.get("value"):
+      raise ValueError(f"Override {path}={value!r} conflicts with fixed value {distribution.get('value')!r}.")
+    return
+  if dtype == "truncated_normal":
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+      raise ValueError(f"Override {path} must be a finite number.")
+    if not float(distribution["min"]) <= float(value) <= float(distribution["max"]):
+      raise ValueError(f"Override {path}={value!r} is outside [{distribution['min']}, {distribution['max']}].")
+    return
+  if dtype == "conditional":
+    raise ValueError(f"Override {path!r} requires its dependency's case to be selected first.")
+  if dtype == "mixture":
+    if not any(_supports_override(component["distribution"], value) for component in distribution["components"]):
+      raise ValueError(f"Override {path}={value!r} is outside all mixture component supports.")
+    return
+  raise ValueError(f"Unsupported override distribution {dtype!r} at {path}.")
+
+
+def _override_distribution(
+  distribution: Mapping[str, Any],
+  context: Mapping[str, Any],
+) -> Mapping[str, Any]:
+  """Return the concrete branch used to validate a conditional override."""
+  if distribution.get("type") != "conditional":
+    return distribution
+  dependency = distribution["depends_on"][0]
+  if dependency not in context:
+    raise ValueError(f"Cannot validate conditional override before {dependency!r} is resolved.")
+  try:
+    return distribution["cases"][context[dependency]]
+  except KeyError as exc:
+    raise ValueError(
+      f"No conditional override case for {dependency}={context[dependency]!r}."
+    ) from exc
+
+
+def _supports_override(distribution: Mapping[str, Any], value: Any) -> bool:
+  try:
+    if distribution.get("type") == "conditional":
+      return False
+    _validate_override(distribution, value, "mixture")
+    return True
+  except (TypeError, ValueError, KeyError):
+    return False

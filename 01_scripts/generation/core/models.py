@@ -46,6 +46,8 @@ class SamplingProvenance:
   decisions: dict[str, Any] = field(default_factory=dict)
   parameters: dict[str, Any] = field(default_factory=dict)
   derived: dict[str, Any] = field(default_factory=dict)
+  overrides: dict[str, Any] = field(default_factory=dict)
+  case_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -111,6 +113,21 @@ class GenerationConfig:
   target_visible_px: float = 15.0
   rotation_deg: float = 0.0
   stroke_width_normalized: float = 4.0
+
+  def with_overrides(self, overrides: dict[str, Any] | None = None) -> "GenerationConfig":
+    """Return a validated copy with case-specific rendering values applied."""
+    from dataclasses import fields
+    values = {field.name: getattr(self, field.name) for field in fields(self)}
+    for name, value in (overrides or {}).items():
+      if name not in values:
+        raise KeyError(f"Unknown generation override: {name!r}.")
+      values[name] = value
+    result = GenerationConfig(**values)
+    if result.canvas_width_px <= 0 or result.canvas_height_px <= 0:
+      raise ValueError("Canvas dimensions must be positive.")
+    if result.target_visible_px <= 0 or result.stroke_width_normalized <= 0:
+      raise ValueError("Target size and stroke width must be positive.")
+    return result
 
 
 @dataclass

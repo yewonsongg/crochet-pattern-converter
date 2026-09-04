@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Mapping
 
 import numpy as np
 
@@ -28,7 +29,9 @@ class ClassSampler:
     self, 
     rng: np.random.Generator, 
     *, 
-    seed: int | None = None
+    seed: int | None = None,
+    overrides: Mapping[str, Any] | None = None,
+    case_id: str | None = None,
   ) -> SampledParameters:
     """Sample one concrete instance of the configured class.
 
@@ -42,7 +45,8 @@ class ClassSampler:
 
     result = sample_class(
       spec = self.spec, 
-      rng = rng
+      rng = rng,
+      overrides = overrides,
     )
 
     provenance = create_sampling_provenance(
@@ -53,6 +57,8 @@ class ClassSampler:
       decisions = result.decisions, 
       parameters = result.parameters, 
       derived = result.derived,
+      overrides = overrides,
+      case_id = case_id,
     )
 
     return SampledParameters(

@@ -49,7 +49,11 @@ def _build_sc_svg(config: GenerationConfig) -> str:
   return tostring(svg, encoding="unicode")
 
 
-def generate_sc(config: GenerationConfig | None = None, sampled_parameters: Mapping[str, Any] | None = None) -> GeneratedObject:
+def generate_sc(
+  config: GenerationConfig | None = None,
+  sampled_parameters: Mapping[str, Any] | None = None,
+  class_id: int = CLASS_ID,
+) -> GeneratedObject:
   config = config or GenerationConfig()
   svg = _build_sc_svg(config)
   # SC is orientation-invariant for labeling purposes.
@@ -58,10 +62,10 @@ def generate_sc(config: GenerationConfig | None = None, sampled_parameters: Mapp
     obb_pixels, config.canvas_width_px, config.canvas_height_px
   )
   yolo_label = format_yolo_obb_label(
-    CLASS_ID, obb_pixels, config.canvas_width_px, config.canvas_height_px
+    class_id, obb_pixels, config.canvas_width_px, config.canvas_height_px
   )
   metadata = {
-    "class_id": CLASS_ID,
+    "class_id": class_id,
     "class_name": CLASS_NAME,
     "phenotype": PHENOTYPE,
     "canvas": {
@@ -84,9 +88,9 @@ def generate_sc(config: GenerationConfig | None = None, sampled_parameters: Mapp
   }
   sampled_parameters = dict(sampled_parameters or {})
   return GeneratedObject(
-    class_id=CLASS_ID,
+    class_id=class_id,
     class_name=CLASS_NAME,
-    phenotype=PHENOTYPE,
+    variant_id=None,
     svg=svg,
     metadata=metadata,
     obb_pixels=obb_pixels,

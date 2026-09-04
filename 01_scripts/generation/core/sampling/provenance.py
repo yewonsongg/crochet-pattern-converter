@@ -103,7 +103,9 @@ def create_sampling_provenance(
   seed: int | None, 
   decisions: Mapping[str, Any], 
   parameters: Mapping[str, Any], 
-  derived: Mapping[str, Any]
+  derived: Mapping[str, Any],
+  overrides: Mapping[str, Any] | None = None,
+  case_id: str | None = None,
 ) -> SamplingProvenance:
   """Create provenance for one sampled class instance.
 
@@ -128,4 +130,6 @@ def create_sampling_provenance(
     decisions = dict(decisions),
     parameters = dict(parameters),
     derived = dict(derived),
+    overrides = dict(overrides or {}),
+    case_id = case_id,
   )
