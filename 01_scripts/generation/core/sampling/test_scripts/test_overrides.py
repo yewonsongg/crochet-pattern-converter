@@ -29,6 +29,7 @@ def main() -> None:
   assert sample.parameters["count"] == 6
   assert sample.parameters["chain_pitch"] == 3.2
   assert sample.derived["diameter"] == 6 * 3.2 / np.pi
+  assert sample.provenance is not None
   assert sample.provenance.overrides == {"variant": "chain", "count": 6, "chain_pitch": 3.2}
 
   try:

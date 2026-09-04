@@ -225,6 +225,7 @@ def _validate_class(config, class_group: str, class_name: str, rng: np.random.Ge
       parameter_values[name].append(value)
       if selected_variant is not None:
         parameter_values_by_variant[name][selected_variant].append(value)
+    assert sample.provenance is not None
     for path, decision in sample.provenance.decisions.items():
       if "value" in decision:
         observed[path].add(decision["value"])
