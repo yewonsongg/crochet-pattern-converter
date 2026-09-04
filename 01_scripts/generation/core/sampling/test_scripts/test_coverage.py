@@ -1,0 +1,1 @@
+"""Check that every single variant/option generated."""
