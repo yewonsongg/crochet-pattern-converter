@@ -1,0 +1,49 @@
+classes:
+  - name: ch
+    id: 0
+    family: primitive
+  - name: slst
+    id: 1
+    family: primitive
+  - name: sc
+    id: 2
+    family: primitive
+  - name: hdc
+    id: 3
+    family: primitive
+  - name: dc
+    id: 4
+    family: primitive
+  - name: tr
+    id: 5
+    family: primitive
+  - name: dtr
+    id: 6
+    family: primitive
+  - name: together
+    id: 7
+    family: compound
+  - name: increase
+    id: 8
+    family: compound
+  - name: post
+    id: 9
+    family: compound
+  - name: crossed
+    id: 10
+    family: compound
+  - name: rounded
+    id: 11
+    family: compound
+  - name: ch3picot
+    id: 12
+    family: compound
+  - name: ring
+    id: 13
+    family: instructive
+  - name: loop
+    id: 14
+    family: instructive
+  - name: jb
+    id: 15
+    family: instructive

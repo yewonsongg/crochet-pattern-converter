@@ -1,0 +1,100 @@
+# yolov8m-obb-p2.yaml
+# YOLOv8m OBB with P2 detection head for small object detection.
+#
+# Derived from yolov8m-obb.yaml (Ultralytics) with P2 head extension.
+# The only structural difference from the detect P2 variant is:
+#   Detect → OBB  (adds angle prediction per box)
+#
+# Detection strides:
+#   P2  stride  4  → symbols ~16px+   (new)
+#   P3  stride  8  → symbols ~32px+
+#   P4  stride 16  → symbols ~64px+
+#   P5  stride 32  → symbols ~128px+
+#
+# Usage:
+#   model = YOLO("yolov8m-obb-p2.yaml")
+#   model.load("yolov8m-obb.pt")       # loads matching backbone weights
+#   model.train(data="stage1_data.yaml", imgsz=640, ...)
+
+nc: 38  # number of classes — must match data.yaml nc
+
+scales:
+  # [depth_multiple, width_multiple, max_channels]
+  # depth_multiple : scales C2f bottleneck repeat counts
+  # width_multiple : scales all channel counts
+  # This project uses 's'. Other scales included for completeness.
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]     
+  m: [0.67, 0.75, 768]    # ← active scale for this project
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+
+# ============================================================
+# BACKBONE
+# Identical to standard yolov8s-obb backbone.
+# Key feature maps:
+#   layer  2  → P2/4   (used in P2 neck branch)
+#   layer  4  → P3/8   (used in P3 neck skip connection)
+#   layer  6  → P4/16  (used in P4 neck skip connection)
+#   layer  9  → P5/32  (used in P5 neck skip connection)
+# ============================================================
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv,  [64, 3, 2]]    #  0 - P1/2
+  - [-1, 1, Conv,  [128, 3, 2]]   #  1 - stride to P2/4
+  - [-1, 3, C2f,   [128, True]]   #  2 - P2/4  ← P2 skip connection
+  - [-1, 1, Conv,  [256, 3, 2]]   #  3 - stride to P3/8
+  - [-1, 6, C2f,   [256, True]]   #  4 - P3/8  ← P3 skip connection
+  - [-1, 1, Conv,  [512, 3, 2]]   #  5 - stride to P4/16
+  - [-1, 6, C2f,   [512, True]]   #  6 - P4/16 ← P4 skip connection
+  - [-1, 1, Conv,  [1024, 3, 2]]  #  7 - stride to P5/32
+  - [-1, 3, C2f,   [1024, True]]  #  8 - P5/32
+  - [-1, 1, SPPF,  [1024, 5]]     #  9 - P5/32 ← P5 skip connection (SPPF)
+
+# ============================================================
+# HEAD
+# Extended PAN neck with P2 branch + OBB heads at P2/P3/P4/P5.
+#
+# Top-down path (semantics flow to finer resolution):
+#   P5(9) → P4(12) → P3(15) → P2(18)
+#
+# Bottom-up path (detail flows back to coarser resolution):
+#   P2(18) → P3(21) → P4(24) → P5(27)
+#
+# Detection layers: 18(P2), 21(P3), 24(P4), 27(P5)
+# ============================================================
+head:
+  # --- Top-down: P5 → P4 ---
+  - [-1, 1, nn.Upsample, [None, 2, 'nearest']]   # 10  upsample SPPF(9)
+  - [[-1, 6], 1, Concat, [1]]                    # 11  cat: upsamp(10) + backbone P4(6)
+  - [-1, 3, C2f, [512]]                          # 12  fused P4 features
+
+  # --- Top-down: P4 → P3 ---
+  - [-1, 1, nn.Upsample, [None, 2, 'nearest']]   # 13  upsample fused P4(12)
+  - [[-1, 4], 1, Concat, [1]]                    # 14  cat: upsamp(13) + backbone P3(4)
+  - [-1, 3, C2f, [256]]                          # 15  fused P3 features
+
+  # --- Top-down: P3 → P2 (new) ---
+  - [-1, 1, nn.Upsample, [None, 2, 'nearest']]   # 16  upsample fused P3(15)
+  - [[-1, 2], 1, Concat, [1]]                    # 17  cat: upsamp(16) + backbone P2(2)
+  - [-1, 3, C2f, [128]]                          # 18  fused P2 features  ← P2 detect
+
+  # --- Bottom-up: P2 → P3 (new) ---
+  - [-1, 1, Conv, [128, 3, 2]]                   # 19  downsample fused P2(18)
+  - [[-1, 15], 1, Concat, [1]]                   # 20  cat: downsamp(19) + fused P3(15)
+  - [-1, 3, C2f, [256]]                          # 21  refined P3 features ← P3 detect
+
+  # --- Bottom-up: P3 → P4 ---
+  - [-1, 1, Conv, [256, 3, 2]]                   # 22  downsample refined P3(21)
+  - [[-1, 12], 1, Concat, [1]]                   # 23  cat: downsamp(22) + fused P4(12)
+  - [-1, 3, C2f, [512]]                          # 24  refined P4 features ← P4 detect
+
+  # --- Bottom-up: P4 → P5 ---
+  - [-1, 1, Conv, [512, 3, 2]]                   # 25  downsample refined P4(24)
+  - [[-1, 9], 1, Concat, [1]]                    # 26  cat: downsamp(25) + SPPF P5(9)
+  - [-1, 3, C2f, [1024]]                         # 27  refined P5 features ← P5 detect
+
+  # --- OBB detection heads ---
+  # from layers: 18(P2/stride4), 21(P3/stride8), 24(P4/stride16), 27(P5/stride32)
+  # args: [nc, ne]  nc = number of classes, ne = extra params per box (1 = angle)
+  - [[18, 21, 24, 27], 1, OBB, [nc, 1]]          # 28  OBB(P2, P3, P4, P5)

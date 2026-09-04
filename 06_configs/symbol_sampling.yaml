@@ -1,0 +1,668 @@
+schema:
+  version: 1
+  coordinate_convention: normalized_100
+  angle_units: degrees
+
+classes:
+  # Primitive classes
+  primitive:
+    ch:
+      parameters:
+        shape:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities: 
+              oval:   0.75
+              circle: 0.25
+
+        aspect_ratio:
+          kind: continuous
+          distribution: 
+            type: conditional
+            depends_on: [shape]
+            cases:
+              oval:
+                type: truncated_normal
+                mean: 1.25
+                std:  0.08
+                min:  1.05
+                max:  1.50
+              circle:
+                type: truncated_normal
+                mean: 1.00
+                std:  0.04
+                min:  0.92
+                max:  1.08
+
+    slst:
+      parameters:
+        shape:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              oval:   0.15
+              circle: 0.85
+
+        aspect_ratio:
+          kind: continuous
+          distribution: 
+            type: conditional
+            depends_on: [shape]
+            cases:
+              oval:
+                type: truncated_normal
+                mean: 1.15
+                std:  0.05
+                min:  1.05
+                max:  1.25
+              circle: 
+                type: truncated_normal
+                mean: 1.00
+                std:  0.04
+                min:  0.92
+                max:  1.08
+
+    sc:
+      parameters:
+        shape: 
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              symmetric:   0.75
+              asymmetric: 0.25
+
+        asymmetry:
+          kind: continuous
+          distribution: 
+            type: conditional
+            depends_on: [shape]
+            cases:
+              symmetric:
+                type: fixed
+                value: 0.0
+              asymmetric:
+                type: truncated_normal
+                mean: 0.15
+                std:  0.05
+                min:  0.05
+                max:  0.30
+
+    hdc:
+      parameters:
+        bar_stem_ratio:
+          kind: continuous
+          distribution: 
+            type: mixture
+            components:
+              - weight: 0.25
+                distribution:
+                  type: truncated_normal
+                  mean: 0.50
+                  std:  0.025
+                  min:  0.45
+                  max:  0.55
+              - weight: 0.50
+                distribution:
+                  type: truncated_normal
+                  mean: 0.333
+                  std:  0.025
+                  min:  0.28
+                  max:  0.39
+              - weight: 0.25
+                distribution:
+                  type: truncated_normal
+                  mean: 0.25
+                  std:  0.02
+                  min:  0.21
+                  max:  0.29
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
+
+    dc:
+      parameters:
+        bar_stem_ratio:
+          kind: continuous
+          distribution: 
+            type: mixture
+            components:
+              - weight: 0.25
+                distribution:
+                  type: truncated_normal
+                  mean: 0.50
+                  std:  0.025
+                  min:  0.45
+                  max:  0.55
+              - weight: 0.50
+                distribution:
+                  type: truncated_normal
+                  mean: 0.333
+                  std:  0.025
+                  min:  0.28
+                  max:  0.39
+              - weight: 0.25
+                distribution:
+                  type: truncated_normal
+                  mean: 0.25
+                  std:  0.02
+                  min:  0.21
+                  max:  0.29
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
+
+    tr:
+      parameters:
+        bar_stem_ratio:
+          kind: continuous
+          distribution: 
+            type: mixture
+            components:
+              - weight: 0.25
+                distribution:
+                  type: truncated_normal
+                  mean: 0.50
+                  std:  0.025
+                  min:  0.45
+                  max:  0.55
+              - weight: 0.50
+                distribution:
+                  type: truncated_normal
+                  mean: 0.333
+                  std:  0.025
+                  min:  0.28
+                  max:  0.39
+              - weight: 0.25
+                distribution:
+                  type: truncated_normal
+                  mean: 0.25
+                  std:  0.02
+                  min:  0.21
+                  max:  0.29
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
+
+    dtr:
+      parameters:
+        bar_stem_ratio:
+          kind: continuous
+          distribution: 
+            type: mixture
+            components:
+              - weight: 0.25
+                distribution:
+                  type: truncated_normal
+                  mean: 0.50
+                  std:  0.025
+                  min:  0.45
+                  max:  0.55
+              - weight: 0.50
+                distribution:
+                  type: truncated_normal
+                  mean: 0.333
+                  std:  0.025
+                  min:  0.28
+                  max:  0.39
+              - weight: 0.25
+                distribution:
+                  type: truncated_normal
+                  mean: 0.25
+                  std:  0.02
+                  min:  0.21
+                  max:  0.29
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
+
+
+  # Compound classes
+  compound:
+    together:
+      topology:
+        top_relation: joined
+        base_relation: separate
+        connector:
+          enabled: true
+          required: false
+          distribution:
+            type: conditional
+            depends_on: [stitch]
+            cases:
+              sc:
+                type: fixed
+                value: none
+              hdc:
+                type: fixed
+                value: bar
+              dc:
+                type: fixed
+                value: bar
+              tr:
+                type: fixed
+                value: bar
+              dtr:
+                type: fixed
+                value: bar
+
+      parameters:
+        stitch:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              sc:  0.05
+              hdc: 0.15
+              dc:  0.50
+              tr:  0.25
+              dtr: 0.05
+
+        count:
+          kind: discrete
+          distribution:
+            type: categorical
+            probabilities:
+              2: 0.30
+              3: 0.40
+              4: 0.20
+              5: 0.07
+              6: 0.03
+
+        spread_angle_deg:
+          kind: continuous
+          distribution: 
+            type: truncated_normal 
+            mean: 24.0
+            std:  5.0
+            min:  10.0
+            max:  40.0 
+
+        connector_length:
+          kind: continuous
+          distribution: 
+            type: conditional
+            depends_on: [stitch]
+            cases:
+              sc:
+                type: fixed
+                value: 0.0
+              hdc:
+                type: truncated_normal
+                mean: 0.20
+                std:  0.04
+                min:  0.10
+                max:  0.30
+              dc:
+                type: truncated_normal
+                mean: 0.20
+                std:  0.04
+                min:  0.10
+                max:  0.30
+              tr:
+                type: truncated_normal
+                mean: 0.20
+                std:  0.04
+                min:  0.10
+                max:  0.30
+              dtr:
+                type: truncated_normal
+                mean: 0.20
+                std:  0.04
+                min:  0.10
+                max:  0.30
+
+      components:
+        stitch:
+          allowed_classes: [sc, hdc, dc, tr, dtr]
+          inherit_generator: true
+    
+    increase:
+      topology:
+        top_relation: separate
+        base_relation: joined
+        connector: 
+          enabled: false
+
+      parameters:
+        chain_presence:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              true: 0.40
+              false: 0.60
+
+        stitch:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              sc:  0.05
+              hdc: 0.15
+              dc:  0.50
+              tr:  0.25
+              dtr: 0.05
+
+        count:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              2: 0.30
+              3: 0.40
+              4: 0.20
+              5: 0.07
+              6: 0.03
+
+        spread_angle_deg:
+          kind: continuous
+          distribution: 
+            type: truncated_normal 
+            mean: 24.0
+            std:  5.0
+            min:  10.0
+            max:  40.0
+
+      components:
+        stitch:
+          allowed_classes: [sc, hdc, dc, tr, dtr]
+          inherit_generator: true
+    
+    post:
+      parameters:
+        post_type:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              front: 0.5
+              back:  0.5
+
+        variant:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              hook:    0.5
+              j_shape: 0.5
+            
+        stitch:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              sc:  0.05
+              hdc: 0.15
+              dc:  0.50
+              tr:  0.25
+              dtr: 0.05
+
+        hook_curvature:
+          kind: continuous
+          distribution: 
+            type: conditional
+            depends_on: [variant]
+            cases:
+              hook:
+                type: truncated_normal
+                mean: 0.15
+                std:  0.04
+                min:  0.08
+                max:  0.25
+              j_shape:
+                type: truncated_normal
+                mean: 0.25
+                std:  0.06
+                min:  0.12
+                max:  0.40
+
+      components:
+        stitch:
+          allowed_classes: [sc, hdc, dc, tr, dtr]
+          inherit_generator: true
+    
+    crossed:
+      parameters:
+        chain_presence:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              true: 0.25
+              false: 0.75
+
+        stitch:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              hdc: 0.15
+              dc:  0.50
+              tr:  0.25
+              dtr: 0.10
+
+      components: 
+        stitch:
+          allowed_classes: [hdc, dc, tr, dtr]
+          inherit_generator: true
+    
+    rounded:
+      topology:
+        top_relation: joined
+        base_relation: joined
+        connector:
+          enabled: true
+          required: true
+          distribution:
+            type: conditional
+            depends_on: [variant]
+            cases:
+              cluster:
+                type: fixed
+                value: bar
+              popcorn:
+                type: fixed
+                value: curved
+
+      parameters:
+        variant:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              cluster: 0.90
+              popcorn: 0.10
+            
+        stitch:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              hdc: 0.10
+              dc:  0.60
+              tr:  0.15
+              dtr: 0.15
+
+        count:
+          kind: discrete
+          distribution:
+            type: conditional
+            depends_on: [variant]
+            cases:
+              cluster:
+                type: categorical
+                probabilities:
+                  3: 0.45
+                  4: 0.35
+                  5: 0.20
+              popcorn:
+                type: categorical
+                probabilities:
+                  4: 0.30
+                  5: 0.50
+                  6: 0.20
+    
+    ch3picot:
+      parameters:
+        radius: 
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.0
+            std:  0.08
+            min:  0.80
+            max:  1.20
+        opening_angle_deg:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 60.0
+            std: 5.0
+            min: 45.0
+            max: 75.0
+        closure_offset:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 0.0
+            std:  0.05
+            min: -0.15
+            max:  0.15
+
+      components:
+        chains:
+          class: ch
+          count: 3
+          inherit_generator: true
+          arrangement: triangular
+        closure:
+          class: slst
+          count: 1
+          inherit_generator: true
+
+
+  # Instructive classes
+  instructive:
+    ring: 
+      parameters:
+        variant:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              magic: 0.55 
+              chain: 0.45
+
+      variants:
+        magic:
+          parameters:
+            diameter:
+              kind: continuous
+              distribution:
+                type: truncated_normal
+                mean: 0.25
+                std:  0.04
+                min:  0.16
+                max:  0.35
+        chain:
+          parameters:
+            count:
+              kind: discrete
+              distribution: 
+                type: categorical
+                probabilities:
+                  4: 0.20
+                  5: 0.30
+                  6: 0.30
+                  7: 0.15
+                  8: 0.05       
+
+            chain_pitch:
+              kind: continuous
+              distribution:
+                type: truncated_normal
+                mean: 3.0
+                std:  0.3
+                min:  2.4
+                max:  3.8
+
+            diameter:
+              kind: derived
+              depends_on: [count, chain_pitch]
+              formula: "count * chain_pitch / pi"
+
+          components:
+            chain:
+              class: ch
+              count: count
+              arrangement: ring
+              inherit_generator: true    
+
+    loop:
+      parameters:
+        aspect_ratio:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.0
+            std:  0.05
+            min:  0.90
+            max:  1.10
+        curvature:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 0.5
+            std:  0.05
+            min:  0.40
+            max:  0.60   
+
+    jb:
+      parameters:
+        phenotype:
+          kind: discrete
+          distribution: 
+            type: categorical
+            probabilities:
+              canonical: 1.0
+      
+        aspect_ratio:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.0
+            std:  0.05
+            min:  0.90
+            max:  1.10
+        
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.15
+            min:  1.4
+            max:  2.2

@@ -1,0 +1,1637 @@
+{
+  "sample_count_per_class": 1000,
+  "base_seed": 1234,
+  "classes": [
+    {
+      "class_group": "primitive",
+      "class_name": "ch",
+      "sample_count": 1000,
+      "parameters": {
+        "aspect_ratio": {
+          "expected_distributions": [
+            {
+              "type": "conditional",
+              "depends_on": [
+                "shape"
+              ],
+              "cases": {
+                "oval": {
+                  "type": "truncated_normal",
+                  "mean": 1.25,
+                  "std": 0.08,
+                  "min": 1.05,
+                  "max": 1.5
+                },
+                "circle": {
+                  "type": "truncated_normal",
+                  "mean": 1.0,
+                  "std": 0.04,
+                  "min": 0.92,
+                  "max": 1.08
+                }
+              }
+            }
+          ],
+          "actual": {
+            "by_dependency_value": {
+              "circle": {
+                "sample_count": 239,
+                "min": 0.921312524905491,
+                "max": 1.0730712050357716,
+                "mean": 0.999298453423777
+              },
+              "oval": {
+                "sample_count": 761,
+                "min": 1.05065683053614,
+                "max": 1.4830479378003176,
+                "mean": 1.254870462664984
+              }
+            }
+          }
+        },
+        "shape": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "oval": 0.75,
+                "circle": 0.25
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "circle",
+              "oval"
+            ],
+            "counts": {
+              "circle": 239,
+              "oval": 761
+            },
+            "frequencies": {
+              "circle": 0.239,
+              "oval": 0.761
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "aspect_ratio": [
+          "circle",
+          "oval"
+        ],
+        "shape": [
+          "circle",
+          "oval"
+        ]
+      }
+    },
+    {
+      "class_group": "primitive",
+      "class_name": "slst",
+      "sample_count": 1000,
+      "parameters": {
+        "aspect_ratio": {
+          "expected_distributions": [
+            {
+              "type": "conditional",
+              "depends_on": [
+                "shape"
+              ],
+              "cases": {
+                "oval": {
+                  "type": "truncated_normal",
+                  "mean": 1.15,
+                  "std": 0.05,
+                  "min": 1.05,
+                  "max": 1.25
+                },
+                "circle": {
+                  "type": "truncated_normal",
+                  "mean": 1.0,
+                  "std": 0.04,
+                  "min": 0.92,
+                  "max": 1.08
+                }
+              }
+            }
+          ],
+          "actual": {
+            "by_dependency_value": {
+              "oval": {
+                "sample_count": 156,
+                "min": 1.0540118024670435,
+                "max": 1.2485751511043897,
+                "mean": 1.1515368378461572
+              },
+              "circle": {
+                "sample_count": 844,
+                "min": 0.9201240482473032,
+                "max": 1.0791993392787753,
+                "mean": 0.9991787569674576
+              }
+            }
+          }
+        },
+        "shape": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "oval": 0.15,
+                "circle": 0.85
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "circle",
+              "oval"
+            ],
+            "counts": {
+              "circle": 844,
+              "oval": 156
+            },
+            "frequencies": {
+              "circle": 0.844,
+              "oval": 0.156
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "aspect_ratio": [
+          "circle",
+          "oval"
+        ],
+        "shape": [
+          "circle",
+          "oval"
+        ]
+      }
+    },
+    {
+      "class_group": "primitive",
+      "class_name": "sc",
+      "sample_count": 1000,
+      "parameters": {
+        "asymmetry": {
+          "expected_distributions": [
+            {
+              "type": "conditional",
+              "depends_on": [
+                "shape"
+              ],
+              "cases": {
+                "symmetric": {
+                  "type": "fixed",
+                  "value": 0.0
+                },
+                "asymmetric": {
+                  "type": "truncated_normal",
+                  "mean": 0.15,
+                  "std": 0.05,
+                  "min": 0.05,
+                  "max": 0.3
+                }
+              }
+            }
+          ],
+          "actual": {
+            "by_dependency_value": {
+              "symmetric": {
+                "sample_count": 752,
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0
+              },
+              "asymmetric": {
+                "sample_count": 248,
+                "min": 0.050287123109157505,
+                "max": 0.265539987657451,
+                "mean": 0.15321252587454207
+              }
+            }
+          }
+        },
+        "shape": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "symmetric": 0.75,
+                "asymmetric": 0.25
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "asymmetric",
+              "symmetric"
+            ],
+            "counts": {
+              "asymmetric": 248,
+              "symmetric": 752
+            },
+            "frequencies": {
+              "asymmetric": 0.248,
+              "symmetric": 0.752
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "asymmetry": [
+          "asymmetric",
+          "symmetric"
+        ],
+        "shape": [
+          "asymmetric",
+          "symmetric"
+        ]
+      }
+    },
+    {
+      "class_group": "primitive",
+      "class_name": "hdc",
+      "sample_count": 1000,
+      "parameters": {
+        "bar_stem_ratio": {
+          "expected_distributions": [
+            {
+              "type": "mixture",
+              "components": [
+                {
+                  "weight": 0.25,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.5,
+                    "std": 0.025,
+                    "min": 0.45,
+                    "max": 0.55
+                  }
+                },
+                {
+                  "weight": 0.5,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.333,
+                    "std": 0.025,
+                    "min": 0.28,
+                    "max": 0.39
+                  }
+                },
+                {
+                  "weight": 0.25,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.25,
+                    "std": 0.02,
+                    "min": 0.21,
+                    "max": 0.29
+                  }
+                }
+              ]
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 0.21057475933951356,
+            "max": 0.546883164894691,
+            "mean": 0.35810081519347525
+          }
+        },
+        "stroke_width": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 1.8,
+              "std": 0.2,
+              "min": 1.3,
+              "max": 2.3
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 1.319018304537713,
+            "max": 2.296831098396463,
+            "mean": 1.796619185775513
+          }
+        }
+      },
+      "decision_coverage": {
+        "bar_stem_ratio": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "class_group": "primitive",
+      "class_name": "dc",
+      "sample_count": 1000,
+      "parameters": {
+        "bar_stem_ratio": {
+          "expected_distributions": [
+            {
+              "type": "mixture",
+              "components": [
+                {
+                  "weight": 0.25,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.5,
+                    "std": 0.025,
+                    "min": 0.45,
+                    "max": 0.55
+                  }
+                },
+                {
+                  "weight": 0.5,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.333,
+                    "std": 0.025,
+                    "min": 0.28,
+                    "max": 0.39
+                  }
+                },
+                {
+                  "weight": 0.25,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.25,
+                    "std": 0.02,
+                    "min": 0.21,
+                    "max": 0.29
+                  }
+                }
+              ]
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 0.21194224677108117,
+            "max": 0.5497403055701117,
+            "mean": 0.35909173661918153
+          }
+        },
+        "stroke_width": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 1.8,
+              "std": 0.2,
+              "min": 1.3,
+              "max": 2.3
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 1.3041563925933788,
+            "max": 2.2869212888708472,
+            "mean": 1.8049911991485001
+          }
+        }
+      },
+      "decision_coverage": {
+        "bar_stem_ratio": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "class_group": "primitive",
+      "class_name": "tr",
+      "sample_count": 1000,
+      "parameters": {
+        "bar_stem_ratio": {
+          "expected_distributions": [
+            {
+              "type": "mixture",
+              "components": [
+                {
+                  "weight": 0.25,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.5,
+                    "std": 0.025,
+                    "min": 0.45,
+                    "max": 0.55
+                  }
+                },
+                {
+                  "weight": 0.5,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.333,
+                    "std": 0.025,
+                    "min": 0.28,
+                    "max": 0.39
+                  }
+                },
+                {
+                  "weight": 0.25,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.25,
+                    "std": 0.02,
+                    "min": 0.21,
+                    "max": 0.29
+                  }
+                }
+              ]
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 0.2123502293101543,
+            "max": 0.547816961724484,
+            "mean": 0.3547563114973052
+          }
+        },
+        "stroke_width": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 1.8,
+              "std": 0.2,
+              "min": 1.3,
+              "max": 2.3
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 1.3133836359959492,
+            "max": 2.296090440665857,
+            "mean": 1.796997244348949
+          }
+        }
+      },
+      "decision_coverage": {
+        "bar_stem_ratio": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "class_group": "primitive",
+      "class_name": "dtr",
+      "sample_count": 1000,
+      "parameters": {
+        "bar_stem_ratio": {
+          "expected_distributions": [
+            {
+              "type": "mixture",
+              "components": [
+                {
+                  "weight": 0.25,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.5,
+                    "std": 0.025,
+                    "min": 0.45,
+                    "max": 0.55
+                  }
+                },
+                {
+                  "weight": 0.5,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.333,
+                    "std": 0.025,
+                    "min": 0.28,
+                    "max": 0.39
+                  }
+                },
+                {
+                  "weight": 0.25,
+                  "distribution": {
+                    "type": "truncated_normal",
+                    "mean": 0.25,
+                    "std": 0.02,
+                    "min": 0.21,
+                    "max": 0.29
+                  }
+                }
+              ]
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 0.21035137483102867,
+            "max": 0.5480713803434489,
+            "mean": 0.3543067523985344
+          }
+        },
+        "stroke_width": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 1.8,
+              "std": 0.2,
+              "min": 1.3,
+              "max": 2.3
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 1.3097352792574626,
+            "max": 2.2979523583085735,
+            "mean": 1.7930031306667775
+          }
+        }
+      },
+      "decision_coverage": {
+        "bar_stem_ratio": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "class_group": "compound",
+      "class_name": "together",
+      "sample_count": 1000,
+      "parameters": {
+        "connector_length": {
+          "expected_distributions": [
+            {
+              "type": "conditional",
+              "depends_on": [
+                "stitch"
+              ],
+              "cases": {
+                "sc": {
+                  "type": "fixed",
+                  "value": 0.0
+                },
+                "hdc": {
+                  "type": "truncated_normal",
+                  "mean": 0.2,
+                  "std": 0.04,
+                  "min": 0.1,
+                  "max": 0.3
+                },
+                "dc": {
+                  "type": "truncated_normal",
+                  "mean": 0.2,
+                  "std": 0.04,
+                  "min": 0.1,
+                  "max": 0.3
+                },
+                "tr": {
+                  "type": "truncated_normal",
+                  "mean": 0.2,
+                  "std": 0.04,
+                  "min": 0.1,
+                  "max": 0.3
+                },
+                "dtr": {
+                  "type": "truncated_normal",
+                  "mean": 0.2,
+                  "std": 0.04,
+                  "min": 0.1,
+                  "max": 0.3
+                }
+              }
+            }
+          ],
+          "actual": {
+            "by_dependency_value": {
+              "dc": {
+                "sample_count": 502,
+                "min": 0.10385247892406789,
+                "max": 0.2999701014364212,
+                "mean": 0.19841152139149287
+              },
+              "sc": {
+                "sample_count": 48,
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0
+              },
+              "tr": {
+                "sample_count": 258,
+                "min": 0.10440609085970594,
+                "max": 0.29205965711183823,
+                "mean": 0.20516797158091127
+              },
+              "dtr": {
+                "sample_count": 53,
+                "min": 0.11709384891663956,
+                "max": 0.2986208535264191,
+                "mean": 0.19643341083548904
+              },
+              "hdc": {
+                "sample_count": 139,
+                "min": 0.12010363755040168,
+                "max": 0.29993852511600433,
+                "mean": 0.20266964693825576
+              }
+            }
+          }
+        },
+        "count": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "2": 0.3,
+                "3": 0.4,
+                "4": 0.2,
+                "5": 0.07,
+                "6": 0.03
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "counts": {
+              "2": 296,
+              "3": 432,
+              "4": 179,
+              "5": 59,
+              "6": 34
+            },
+            "frequencies": {
+              "2": 0.296,
+              "3": 0.432,
+              "4": 0.179,
+              "5": 0.059,
+              "6": 0.034
+            }
+          }
+        },
+        "spread_angle_deg": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 24.0,
+              "std": 5.0,
+              "min": 10.0,
+              "max": 40.0
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 10.405473404580507,
+            "max": 39.57068470921523,
+            "mean": 24.084263242095474
+          }
+        },
+        "stitch": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "sc": 0.05,
+                "hdc": 0.15,
+                "dc": 0.5,
+                "tr": 0.25,
+                "dtr": 0.05
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "dc",
+              "dtr",
+              "hdc",
+              "sc",
+              "tr"
+            ],
+            "counts": {
+              "dc": 502,
+              "dtr": 53,
+              "hdc": 139,
+              "sc": 48,
+              "tr": 258
+            },
+            "frequencies": {
+              "dc": 0.502,
+              "dtr": 0.053,
+              "hdc": 0.139,
+              "sc": 0.048,
+              "tr": 0.258
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "connector_length": [
+          "dc",
+          "dtr",
+          "hdc",
+          "sc",
+          "tr"
+        ],
+        "count": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "stitch": [
+          "dc",
+          "dtr",
+          "hdc",
+          "sc",
+          "tr"
+        ],
+        "topology.connector": [
+          "dc",
+          "dtr",
+          "hdc",
+          "sc",
+          "tr"
+        ]
+      }
+    },
+    {
+      "class_group": "compound",
+      "class_name": "increase",
+      "sample_count": 1000,
+      "parameters": {
+        "chain_presence": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "true": 0.4,
+                "false": 0.6
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              false,
+              true
+            ],
+            "counts": {
+              "False": 627,
+              "True": 373
+            },
+            "frequencies": {
+              "False": 0.627,
+              "True": 0.373
+            }
+          }
+        },
+        "count": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "2": 0.3,
+                "3": 0.4,
+                "4": 0.2,
+                "5": 0.07,
+                "6": 0.03
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "counts": {
+              "2": 327,
+              "3": 387,
+              "4": 198,
+              "5": 63,
+              "6": 25
+            },
+            "frequencies": {
+              "2": 0.327,
+              "3": 0.387,
+              "4": 0.198,
+              "5": 0.063,
+              "6": 0.025
+            }
+          }
+        },
+        "spread_angle_deg": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 24.0,
+              "std": 5.0,
+              "min": 10.0,
+              "max": 40.0
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 10.756621961402821,
+            "max": 38.41978113403303,
+            "mean": 24.12038260677959
+          }
+        },
+        "stitch": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "sc": 0.05,
+                "hdc": 0.15,
+                "dc": 0.5,
+                "tr": 0.25,
+                "dtr": 0.05
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "dc",
+              "dtr",
+              "hdc",
+              "sc",
+              "tr"
+            ],
+            "counts": {
+              "dc": 519,
+              "dtr": 48,
+              "hdc": 129,
+              "sc": 60,
+              "tr": 244
+            },
+            "frequencies": {
+              "dc": 0.519,
+              "dtr": 0.048,
+              "hdc": 0.129,
+              "sc": 0.06,
+              "tr": 0.244
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "chain_presence": [
+          false,
+          true
+        ],
+        "count": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "stitch": [
+          "dc",
+          "dtr",
+          "hdc",
+          "sc",
+          "tr"
+        ]
+      }
+    },
+    {
+      "class_group": "compound",
+      "class_name": "post",
+      "sample_count": 1000,
+      "parameters": {
+        "hook_curvature": {
+          "expected_distributions": [
+            {
+              "type": "conditional",
+              "depends_on": [
+                "variant"
+              ],
+              "cases": {
+                "hook": {
+                  "type": "truncated_normal",
+                  "mean": 0.15,
+                  "std": 0.04,
+                  "min": 0.08,
+                  "max": 0.25
+                },
+                "j_shape": {
+                  "type": "truncated_normal",
+                  "mean": 0.25,
+                  "std": 0.06,
+                  "min": 0.12,
+                  "max": 0.4
+                }
+              }
+            }
+          ],
+          "actual": {
+            "by_dependency_value": {
+              "j_shape": {
+                "sample_count": 501,
+                "min": 0.12054121258028735,
+                "max": 0.38490933477052963,
+                "mean": 0.24731543591010172
+              },
+              "hook": {
+                "sample_count": 499,
+                "min": 0.08024689294278733,
+                "max": 0.24356380244909848,
+                "mean": 0.15160943466648855
+              }
+            }
+          }
+        },
+        "post_type": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "front": 0.5,
+                "back": 0.5
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "back",
+              "front"
+            ],
+            "counts": {
+              "back": 499,
+              "front": 501
+            },
+            "frequencies": {
+              "back": 0.499,
+              "front": 0.501
+            }
+          }
+        },
+        "stitch": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "sc": 0.05,
+                "hdc": 0.15,
+                "dc": 0.5,
+                "tr": 0.25,
+                "dtr": 0.05
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "dc",
+              "dtr",
+              "hdc",
+              "sc",
+              "tr"
+            ],
+            "counts": {
+              "dc": 511,
+              "dtr": 47,
+              "hdc": 153,
+              "sc": 35,
+              "tr": 254
+            },
+            "frequencies": {
+              "dc": 0.511,
+              "dtr": 0.047,
+              "hdc": 0.153,
+              "sc": 0.035,
+              "tr": 0.254
+            }
+          }
+        },
+        "variant": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "hook": 0.5,
+                "j_shape": 0.5
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "hook",
+              "j_shape"
+            ],
+            "counts": {
+              "hook": 499,
+              "j_shape": 501
+            },
+            "frequencies": {
+              "hook": 0.499,
+              "j_shape": 0.501
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "hook_curvature": [
+          "hook",
+          "j_shape"
+        ],
+        "post_type": [
+          "back",
+          "front"
+        ],
+        "stitch": [
+          "dc",
+          "dtr",
+          "hdc",
+          "sc",
+          "tr"
+        ],
+        "variant": [
+          "hook",
+          "j_shape"
+        ]
+      }
+    },
+    {
+      "class_group": "compound",
+      "class_name": "crossed",
+      "sample_count": 1000,
+      "parameters": {
+        "chain_presence": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "true": 0.25,
+                "false": 0.75
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              false,
+              true
+            ],
+            "counts": {
+              "False": 756,
+              "True": 244
+            },
+            "frequencies": {
+              "False": 0.756,
+              "True": 0.244
+            }
+          }
+        },
+        "stitch": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "hdc": 0.15,
+                "dc": 0.5,
+                "tr": 0.25,
+                "dtr": 0.1
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "dc",
+              "dtr",
+              "hdc",
+              "tr"
+            ],
+            "counts": {
+              "dc": 517,
+              "dtr": 83,
+              "hdc": 153,
+              "tr": 247
+            },
+            "frequencies": {
+              "dc": 0.517,
+              "dtr": 0.083,
+              "hdc": 0.153,
+              "tr": 0.247
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "chain_presence": [
+          false,
+          true
+        ],
+        "stitch": [
+          "dc",
+          "dtr",
+          "hdc",
+          "tr"
+        ]
+      }
+    },
+    {
+      "class_group": "compound",
+      "class_name": "rounded",
+      "sample_count": 1000,
+      "parameters": {
+        "count": {
+          "expected_distributions": [
+            {
+              "type": "conditional",
+              "depends_on": [
+                "variant"
+              ],
+              "cases": {
+                "cluster": {
+                  "type": "categorical",
+                  "probabilities": {
+                    "3": 0.45,
+                    "4": 0.35,
+                    "5": 0.2
+                  }
+                },
+                "popcorn": {
+                  "type": "categorical",
+                  "probabilities": {
+                    "4": 0.3,
+                    "5": 0.5,
+                    "6": 0.2
+                  }
+                }
+              }
+            }
+          ],
+          "actual": {
+            "by_dependency_value": {
+              "cluster": {
+                "sample_count": 888,
+                "observed": [
+                  3,
+                  4,
+                  5
+                ],
+                "counts": {
+                  "3": 384,
+                  "4": 323,
+                  "5": 181
+                },
+                "frequencies": {
+                  "3": 0.43243243243243246,
+                  "4": 0.36373873873873874,
+                  "5": 0.20382882882882883
+                }
+              },
+              "popcorn": {
+                "sample_count": 112,
+                "observed": [
+                  4,
+                  5,
+                  6
+                ],
+                "counts": {
+                  "4": 34,
+                  "5": 57,
+                  "6": 21
+                },
+                "frequencies": {
+                  "4": 0.30357142857142855,
+                  "5": 0.5089285714285714,
+                  "6": 0.1875
+                }
+              }
+            }
+          }
+        },
+        "stitch": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "hdc": 0.1,
+                "dc": 0.6,
+                "tr": 0.15,
+                "dtr": 0.15
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "dc",
+              "dtr",
+              "hdc",
+              "tr"
+            ],
+            "counts": {
+              "dc": 583,
+              "dtr": 167,
+              "hdc": 113,
+              "tr": 137
+            },
+            "frequencies": {
+              "dc": 0.583,
+              "dtr": 0.167,
+              "hdc": 0.113,
+              "tr": 0.137
+            }
+          }
+        },
+        "variant": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "cluster": 0.9,
+                "popcorn": 0.1
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "cluster",
+              "popcorn"
+            ],
+            "counts": {
+              "cluster": 888,
+              "popcorn": 112
+            },
+            "frequencies": {
+              "cluster": 0.888,
+              "popcorn": 0.112
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "count": [
+          "cluster",
+          "popcorn"
+        ],
+        "count.cases[cluster]": [
+          3,
+          4,
+          5
+        ],
+        "count.cases[popcorn]": [
+          4,
+          5,
+          6
+        ],
+        "stitch": [
+          "dc",
+          "dtr",
+          "hdc",
+          "tr"
+        ],
+        "topology.connector": [
+          "cluster",
+          "popcorn"
+        ],
+        "variant": [
+          "cluster",
+          "popcorn"
+        ]
+      }
+    },
+    {
+      "class_group": "compound",
+      "class_name": "ch3picot",
+      "sample_count": 1000,
+      "parameters": {
+        "closure_offset": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 0.0,
+              "std": 0.05,
+              "min": -0.15,
+              "max": 0.15
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": -0.14808184377263953,
+            "max": 0.14505050028285446,
+            "mean": 0.0008438986426812088
+          }
+        },
+        "opening_angle_deg": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 60.0,
+              "std": 5.0,
+              "min": 45.0,
+              "max": 75.0
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 46.03357625676852,
+            "max": 74.24709941287645,
+            "mean": 60.00033668151869
+          }
+        },
+        "radius": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 1.0,
+              "std": 0.08,
+              "min": 0.8,
+              "max": 1.2
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 0.8074895157852977,
+            "max": 1.197666508239349,
+            "mean": 1.0018292404248859
+          }
+        }
+      },
+      "decision_coverage": {}
+    },
+    {
+      "class_group": "instructive",
+      "class_name": "ring",
+      "sample_count": 1000,
+      "parameters": {
+        "chain_pitch": {
+          "expected_distributions": [
+            {
+              "variant": "chain",
+              "type": "truncated_normal",
+              "mean": 3.0,
+              "std": 0.3,
+              "min": 2.4,
+              "max": 3.8
+            }
+          ],
+          "actual": {
+            "by_variant": {
+              "chain": {
+                "sample_count": 426,
+                "min": 2.404361207440697,
+                "max": 3.795276137027383,
+                "mean": 3.0220389426041794
+              }
+            }
+          }
+        },
+        "count": {
+          "expected_distributions": [
+            {
+              "variant": "chain",
+              "type": "categorical",
+              "probabilities": {
+                "4": 0.2,
+                "5": 0.3,
+                "6": 0.3,
+                "7": 0.15,
+                "8": 0.05
+              }
+            }
+          ],
+          "actual": {
+            "by_variant": {
+              "chain": {
+                "sample_count": 426,
+                "observed": [
+                  4,
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "counts": {
+                  "4": 89,
+                  "5": 143,
+                  "6": 117,
+                  "7": 56,
+                  "8": 21
+                },
+                "frequencies": {
+                  "4": 0.20892018779342722,
+                  "5": 0.33568075117370894,
+                  "6": 0.2746478873239437,
+                  "7": 0.13145539906103287,
+                  "8": 0.04929577464788732
+                }
+              }
+            }
+          }
+        },
+        "diameter": {
+          "expected_distributions": [
+            {
+              "variant": "magic",
+              "type": "truncated_normal",
+              "mean": 0.25,
+              "std": 0.04,
+              "min": 0.16,
+              "max": 0.35
+            },
+            {
+              "variant": "chain",
+              "type": "derived",
+              "depends_on": [
+                "count",
+                "chain_pitch"
+              ],
+              "formula": "count * chain_pitch / pi"
+            }
+          ],
+          "actual": {
+            "by_variant": {
+              "magic": {
+                "sample_count": 574,
+                "min": 0.160393299532259,
+                "max": 0.34979271609130547,
+                "mean": 0.24891731417607135
+              },
+              "chain": {
+                "sample_count": 426,
+                "min": 3.1209208610777774,
+                "max": 9.156598999021588,
+                "mean": 5.2708627427275
+              }
+            }
+          }
+        },
+        "variant": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "magic": 0.55,
+                "chain": 0.45
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "chain",
+              "magic"
+            ],
+            "counts": {
+              "chain": 426,
+              "magic": 574
+            },
+            "frequencies": {
+              "chain": 0.426,
+              "magic": 0.574
+            }
+          }
+        }
+      },
+      "decision_coverage": {
+        "count": [
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "variant": [
+          "chain",
+          "magic"
+        ]
+      }
+    },
+    {
+      "class_group": "instructive",
+      "class_name": "loop",
+      "sample_count": 1000,
+      "parameters": {
+        "aspect_ratio": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 1.0,
+              "std": 0.05,
+              "min": 0.9,
+              "max": 1.1
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 0.9005198486253956,
+            "max": 1.0984259931559996,
+            "mean": 0.9983102318364149
+          }
+        },
+        "curvature": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 0.5,
+              "std": 0.05,
+              "min": 0.4,
+              "max": 0.6
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 0.4016287430286854,
+            "max": 0.5991764652600804,
+            "mean": 0.5009373221058074
+          }
+        }
+      },
+      "decision_coverage": {}
+    },
+    {
+      "class_group": "instructive",
+      "class_name": "jb",
+      "sample_count": 1000,
+      "parameters": {
+        "aspect_ratio": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 1.0,
+              "std": 0.05,
+              "min": 0.9,
+              "max": 1.1
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 0.9019913552978298,
+            "max": 1.09856200870222,
+            "mean": 1.0002162690114995
+          }
+        },
+        "phenotype": {
+          "expected_distributions": [
+            {
+              "type": "categorical",
+              "probabilities": {
+                "canonical": 1.0
+              }
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "observed": [
+              "canonical"
+            ],
+            "counts": {
+              "canonical": 1000
+            },
+            "frequencies": {
+              "canonical": 1.0
+            }
+          }
+        },
+        "stroke_width": {
+          "expected_distributions": [
+            {
+              "type": "truncated_normal",
+              "mean": 1.8,
+              "std": 0.15,
+              "min": 1.4,
+              "max": 2.2
+            }
+          ],
+          "actual": {
+            "sample_count": 1000,
+            "min": 1.4025856664311316,
+            "max": 2.1907682619248323,
+            "mean": 1.803382378338214
+          }
+        }
+      },
+      "decision_coverage": {
+        "phenotype": [
+          "canonical"
+        ]
+      }
+    }
+  ]
+}
