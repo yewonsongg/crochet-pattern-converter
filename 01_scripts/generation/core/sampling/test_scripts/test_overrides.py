@@ -1,5 +1,7 @@
 """Regression checks for explicit sampling overrides."""
 
+from dataclasses import asdict
+import json
 from pathlib import Path
 import sys
 
@@ -25,6 +27,9 @@ def main() -> None:
     seed=7,
     overrides={"variant": "chain", "count": 6, "chain_pitch": 3.2},
   )
+  print("\n=== SampledParameters with explicit overrides ===")
+  print(json.dumps(asdict(sample), indent=2, default=str))
+
   assert sample.parameters["variant"] == "chain"
   assert sample.parameters["count"] == 6
   assert sample.parameters["chain_pitch"] == 3.2

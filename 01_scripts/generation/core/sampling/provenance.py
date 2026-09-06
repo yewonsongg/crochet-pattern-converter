@@ -109,6 +109,8 @@ def create_sampling_provenance(
 ) -> SamplingProvenance:
   """Create provenance for one sampled class instance.
 
+  The supplied mappings are copied into ordinary dictionaries so the returned provenance record contains snapshots of the sampling state rather than references to the caller's mutable mappings.
+
   Args:
     config_identity: Identity of the ontology and sampling configurations used for sampling.
     class_group: Configuration group containing the sampled class.
@@ -117,6 +119,8 @@ def create_sampling_provenance(
     decisions: Discrete sampling decisions made for the instance.
     parameters: Continuous and discrete sampled parameter values.
     derived: Values computed from the sampled parameters.
+    overrides: Explicit parameter values supplied by the caller instead of being sampled naturally. Defaults to an empty mapping.
+    case_id: Optional identifier for a coverage, rendering, smoke-test, or regression case.
 
   Returns:
     A sampling-provenance record for the generated instance.

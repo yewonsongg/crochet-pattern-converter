@@ -1,7 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+
+import math
+
+from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
+from math import isclose, isfinite
 
 import numpy as np
 
@@ -29,6 +33,8 @@ class ConfigIdentity:
 class SamplingProvenance:
   """Provenance metadata for one sampled class instance.
   
+  Records the configuration identity, class identity, random seed, sampling decisions, resulting values, and any explicit overrides used to produce one sampled instance.
+
   Attributes:
     config_identity: Configuration identity used for sampling.
     class_group: Configuration group containing the sampled class.
@@ -37,6 +43,8 @@ class SamplingProvenance:
     decisions: Discrete sampling decisions.
     parameters: Directly sampled parameter values.
     derived: Values derived from sampled parameters.
+    overrides: Parameter values explicitly supplied by the caller instead of being sampled naturally.
+    case_id: Optional identifier for the inspection, regression, or coverage case that produced this sample.
   """
 
   config_identity: ConfigIdentity
@@ -100,6 +108,8 @@ class SampledParameters:
 class GenerationConfig:
   """Rendering configuration for one generated symbol.
 
+  This configuration controls the isolated rendering context used by a class generator. It describes canvas dimensions, target visible-symbol size, visual rotation, and normalized SVG stroke width.
+
   Attributes:
     canvas_width_px: Output canvas width in pixels.
     canvas_height_px: Output canvas height in pixels.
@@ -114,19 +124,70 @@ class GenerationConfig:
   rotation_deg: float = 0.0
   stroke_width_normalized: float = 4.0
 
-  def with_overrides(self, overrides: dict[str, Any] | None = None) -> "GenerationConfig":
-    """Return a validated copy with case-specific rendering values applied."""
-    from dataclasses import fields
-    values = {field.name: getattr(self, field.name) for field in fields(self)}
+  def with_overrides(
+    self, 
+    overrides: dict[str, Any] | None = None
+  ) -> "GenerationConfig":
+    """Return a copy with validated rendering overrides applied.
+    
+    The original configuration is not modified. Only fields declared by ``GenerationConfig`` may be overridden.
+
+    Args:
+      overrides: Mapping of field names to replacement values. If ``None`` or empty, an equivalent copy of the current configuration is returned.
+
+    Returns:
+      A new validated ``GenerationConfig`` instance.
+
+    Raises: 
+      KeyError: If ``overrides`` contains an unknown configuration field.
+      ValueError: If the resulting configuration contains invalid dimensions
+      TypeError: If ``overrides`` is not a mapping.
+    """
+
+    if overrides is not None and not isinstance(overrides, Mapping):
+      raise TypeError("Generation override must be a mapping or None.")
+
+    values = {
+      field.name: getattr(self, field.name) 
+      for field in fields(self)
+    }
+
     for name, value in (overrides or {}).items():
       if name not in values:
         raise KeyError(f"Unknown generation override: {name!r}.")
       values[name] = value
+
     result = GenerationConfig(**values)
-    if result.canvas_width_px <= 0 or result.canvas_height_px <= 0:
-      raise ValueError("Canvas dimensions must be positive.")
-    if result.target_visible_px <= 0 or result.stroke_width_normalized <= 0:
-      raise ValueError("Target size and stroke width must be positive.")
+
+    if (
+      isinstance(result.canvas_width_px, bool)
+      or not isinstance(result.canvas_width_px, int)
+      or result.canvas_width_px <= 0
+    ):
+      raise ValueError("canvas_width_px must be a positive integer.")
+
+    if (
+      isinstance(result.canvas_height_px, bool)
+      or not isinstance(result.canvas_width_px, int)
+      or result.canvas_height_px <= 0
+    ):
+      raise ValueError("canvas_height_px must be a positive integer.")
+
+    for name in ("target_visible_px", "rotation_deg", "stroke_width_normalized"):
+      value = getattr(result, name)
+
+      if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be numeric.")
+
+      if not math.isfinite(float(value)):
+        raise ValueError(f"{name} must be finite.")
+
+    if result.target_visible_px <= 0:
+      raise ValueError("target_visible_px muts be positive.")
+
+    if result.stroke_width_normalized <= 0:
+      raise ValueError("stroke_width_normalized must be positive.")
+    
     return result
 
 
