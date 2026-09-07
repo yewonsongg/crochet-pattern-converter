@@ -38,6 +38,16 @@ label {
   -webkit-tap-highlight-color: transparent;
 }
 
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 .craft-grid {
   background-image:
     linear-gradient(to right, rgb(0 0 0 / 0.025) 1px, transparent 1px),
