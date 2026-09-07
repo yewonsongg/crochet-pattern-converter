@@ -9,7 +9,7 @@ const gaegu = Gaegu({
 });
 
 export const metadata: Metadata = {
-  title: "StitchScript — Crochet Pattern Converter",
+  title: "stitched",
   description: "Turn crochet chart PDFs into clear, editable written patterns.",
 };
 
