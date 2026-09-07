@@ -42,17 +42,17 @@ export function PatternConverter() {
   if (result) return <ConversionResults result={result} onStartOver={startOver} />;
 
   return (
-    <section aria-labelledby="converter-title" className="relative rounded-[2rem] border-2 border-black bg-[#efeee9] p-5 shadow-[7px_7px_0_#171717] sm:p-7 lg:p-8">
+    <section aria-labelledby="converter-title" className="relative rounded-[2rem] border-2 border-black bg-[#efeee9] p-5 shadow-[7px_7px_0_#171717] sm:p-6">
       <span className="font-hand absolute -right-3 -top-3 grid h-11 w-11 rotate-6 place-items-center rounded-full border-2 border-black bg-white text-lg font-bold" aria-hidden="true">✦</span>
-      <div className="mb-6">
+      <div className="mb-4">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/45">Step 01</p>
         <h2 id="converter-title" className="font-hand mt-1 text-2xl font-bold sm:text-3xl">Upload your crochet chart</h2>
-        <p className="mt-2 text-sm leading-6 text-black/55">Choose a PDF chart to load a sample written pattern.</p>
+        <p className="mt-1 text-sm leading-5 text-black/55">Choose a PDF chart to load a sample written pattern.</p>
       </div>
 
       <PdfUpload file={file} error={error} disabled={isLoading} onFileChange={handleFileChange} />
 
-      <button type="button" onClick={handleConvert} disabled={!file || isLoading} className="mt-5 flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-black px-6 text-sm font-black text-white transition hover:-translate-y-0.5 hover:shadow-[0_5px_0_rgb(0_0_0_/_0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-4 disabled:cursor-not-allowed disabled:bg-black/20 disabled:text-black/45 disabled:shadow-none disabled:hover:translate-y-0">
+      <button type="button" onClick={handleConvert} disabled={!file || isLoading} className="mt-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-black px-6 text-sm font-black text-white transition hover:-translate-y-0.5 hover:shadow-[0_5px_0_rgb(0_0_0_/_0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-4 disabled:cursor-not-allowed disabled:bg-black/20 disabled:text-black/45 disabled:shadow-none disabled:hover:translate-y-0">
         {isLoading ? <><Spinner /> Preparing demo pattern…</> : <>Convert to written pattern <ArrowIcon /></>}
       </button>
 

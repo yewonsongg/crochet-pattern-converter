@@ -30,7 +30,7 @@ export function ConversionResults({ result, onStartOver }: ConversionResultsProp
   };
 
   return (
-    <section aria-labelledby="result-title" className="rounded-[2rem] border-2 border-black bg-white p-5 shadow-[7px_7px_0_#171717] sm:p-7">
+    <section aria-labelledby="result-title" className="rounded-[2rem] border-2 border-black bg-white p-5 shadow-[7px_7px_0_#171717] sm:p-6">
       <div className="flex flex-col gap-4 border-b border-black/12 pb-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -44,12 +44,12 @@ export function ConversionResults({ result, onStartOver }: ConversionResultsProp
         </button>
       </div>
 
-      <p className="mt-5 text-sm leading-6 text-black/55">Edit any instruction below before copying your sample pattern.</p>
-      <div className="mt-4 max-h-[22rem] space-y-3 overflow-y-auto pr-1">
+      <p className="mt-4 text-sm leading-6 text-black/55">Edit any instruction below before copying your sample pattern.</p>
+      <div className="mt-3 max-h-[18rem] space-y-3 overflow-y-auto pr-1">
         {instructions.map((instruction) => <InstructionEditor key={instruction.id} instruction={instruction} onChange={updateInstruction} />)}
       </div>
 
-      <div className="mt-5 flex flex-col-reverse gap-3 border-t border-black/12 pt-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-4 flex flex-col-reverse gap-3 border-t border-black/12 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p role="status" aria-live="polite" className={`min-h-5 text-xs font-bold ${copyStatus === "error" ? "text-red-700" : "text-black/55"}`}>
           {copyStatus === "success" && "Pattern copied to your clipboard."}
           {copyStatus === "error" && "Couldn’t access the clipboard. Please select and copy the text manually."}
