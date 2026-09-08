@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
-from .artifacts import write_generated_artifacts
 from .models import GeneratedObject, GenerationConfig
 from .sampling import SamplingConfig
 
@@ -128,5 +127,6 @@ def generate_rendering_case(
     "generation_overrides": dict(case.generation or {}),
   }
   if output_dir is not None:
+    from .artifacts import write_generated_artifacts
     write_generated_artifacts(generated, Path(output_dir) / case.case_id)
   return generated

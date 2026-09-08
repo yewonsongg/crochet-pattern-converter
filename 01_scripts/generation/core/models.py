@@ -222,9 +222,9 @@ class GeneratedObject:
   variant_id: str | None
   svg: str
   metadata: dict[str, Any]
-  obb_pixels: np.ndarray
-  obb_normalized: np.ndarray
-  yolo_label: str
+  obb_pixels: np.ndarray | None = None
+  obb_normalized: np.ndarray | None = None
+  yolo_label: str | None = None
   sampled_parameters: dict[str, Any] = field(default_factory=dict)
   sampling_provenance: SamplingProvenance | None = None
   svg_path: Path | None = None

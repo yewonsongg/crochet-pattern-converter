@@ -24,10 +24,10 @@ classes:
             cases:
               oval:
                 type: truncated_normal
-                mean: 1.25
+                mean: 1.50
                 std:  0.08
-                min:  1.05
-                max:  1.50
+                min:  1.25
+                max:  1.75
               circle:
                 type: truncated_normal
                 mean: 1.00

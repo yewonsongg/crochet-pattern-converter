@@ -1,8 +1,16 @@
+from .primitive.ch import generate_ch
+from .primitive.slst import generate_slst
 from .primitive.sc import generate_sc
 
 
 GENERATOR_REGISTRY = {
-  "sc": generate_sc,
+  ("primitive", "ch"): generate_ch,
+  ("primitive", "slst"): generate_slst,
+  ("primitive", "sc"): generate_sc,
+}
+
+EXPECTED_PRIMITIVE_GENERATORS = {
+  "ch", "slst", "sc", "hdc", "dc", "tr", "dtr",
 }
 
 CLASS_GROUPS = {

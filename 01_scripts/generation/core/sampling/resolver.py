@@ -402,7 +402,7 @@ def _validate_override(
     return
   
   if dtype == "fixed":
-    fixed_value = distribution.get("fixed")
+    fixed_value = distribution.get("value")
     if value != fixed_value:
       raise ValueError(f"Override {path}={value!r} conflicts with fixed value {distribution.get('value')!r}.")
 
