@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ConversionResponse, PatternInstruction } from "@/lib/mock-conversion";
+import type { ConversionResponse, PatternInstruction } from "@/lib/conversion";
 
 interface ConversionResultsProps {
   result: ConversionResponse;

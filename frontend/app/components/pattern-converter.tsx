@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { convertPattern, type ConversionResponse } from "@/lib/mock-conversion";
+import { convertPattern, type ConversionResponse } from "@/lib/conversion";
 import { ConversionResults } from "./conversion-results";
 import { PdfUpload } from "./pdf-upload";
 
@@ -24,7 +24,9 @@ export function PatternConverter() {
 
     try {
       const response = await convertPattern(file);
-      if (response.status !== "completed") throw new Error(response.message || "Conversion could not be completed.");
+      if (response.status !== "completed") {
+        throw new Error(response.message || "Conversion could not be completed.");
+      }
       setResult(response);
     } catch (conversionError) {
       setError(conversionError instanceof Error ? conversionError.message : "Something went wrong. Please try again.");
@@ -53,11 +55,11 @@ export function PatternConverter() {
       <PdfUpload file={file} error={error} disabled={isLoading} onFileChange={handleFileChange} />
 
       <button type="button" onClick={handleConvert} disabled={!file || isLoading} className="mt-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-black px-6 text-sm font-black text-white transition hover:-translate-y-0.5 hover:shadow-[0_5px_0_rgb(0_0_0_/_0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-4 disabled:cursor-not-allowed disabled:bg-black/20 disabled:text-black/45 disabled:shadow-none disabled:hover:translate-y-0">
-        {isLoading ? <><Spinner /> Preparing demo pattern…</> : <>Convert to written pattern <ArrowIcon /></>}
+        {isLoading ? <><Spinner /> Uploading PDF…</> : <>Convert to written pattern <ArrowIcon /></>}
       </button>
 
-      {isLoading && <p role="status" aria-live="polite" className="mt-3 text-center text-xs font-bold text-black/55">This is a simulated conversion. No model is analyzing your PDF.</p>}
-      <p className="mt-5 text-center text-[11px] leading-5 text-black/45"><span aria-hidden="true">♢</span> Prototype mode — your file stays in this browser</p>
+      {isLoading && <p role="status" aria-live="polite" className="mt-3 text-center text-xs font-bold text-black/55">The backend returns mock data. No model is analyzing your PDF yet.</p>}
+      <p className="mt-3 text-center text-[11px] leading-5 text-black/45"><span aria-hidden="true">♢</span> Prototype mode — uploads are discarded after conversion</p>
     </section>
   );
 }
