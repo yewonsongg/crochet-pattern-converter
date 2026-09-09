@@ -93,6 +93,25 @@ def main() -> None:
   assert generated.obb_pixels is None
   assert generated.yolo_label is None
   fromstring(generated.svg)
+
+  for class_name, expected_count, seed in (("tr", 4, 6000), ("dtr", 5, 7000)):
+    spec = config.resolve("primitive", class_name)
+    generator = GENERATOR_REGISTRY[("primitive", class_name)]
+    sample = config.sample(
+      "primitive", class_name, np.random.default_rng(seed), seed=seed,
+      overrides={
+        "bar_stem_ratio": 0.333,
+        "cross_bar_ratio": 0.36,
+        "cross_bar_y": 0.50,
+        "cross_bar_angle_deg": -10.0,
+      },
+    )
+    generated = generator(spec, sample, GenerationConfig())
+    assert generated.svg.count("<line") == expected_count
+    assert generated.metadata["cross_bar_count"] == expected_count - 2
+    assert generated.obb_pixels is None
+    assert generated.yolo_label is None
+    fromstring(generated.svg)
   print("Sampling-to-SVG pipeline checks passed.")
 
 

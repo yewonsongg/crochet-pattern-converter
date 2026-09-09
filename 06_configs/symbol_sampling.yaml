@@ -216,6 +216,30 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+        cross_bar_ratio:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.36
+            std: 0.04
+            min: 0.28
+            max: 0.45
+        cross_bar_y:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.50
+            std: 0.08
+            min: 0.42
+            max: 0.62
+        cross_bar_angle_deg:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.0
+            std: 15.0
+            min: -45.0
+            max: 45.0
         stroke_width:
           kind: continuous
           distribution: 
@@ -253,6 +277,30 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+        cross_bar_ratio:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.36
+            std: 0.04
+            min: 0.28
+            max: 0.45
+        cross_bar_y:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.50
+            std: 0.08
+            min: 0.42
+            max: 0.62
+        cross_bar_angle_deg:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.0
+            std: 15.0
+            min: -45.0
+            max: 45.0
         stroke_width:
           kind: continuous
           distribution: 
