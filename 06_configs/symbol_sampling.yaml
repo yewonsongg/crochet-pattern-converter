@@ -85,10 +85,10 @@ classes:
                 value: 0.0
               asymmetric:
                 type: truncated_normal
-                mean: 0.15
-                std:  0.05
-                min:  0.05
-                max:  0.30
+                mean: 0.0
+                std:  0.10
+                min:  -0.25
+                max:  0.25
 
     hdc:
       parameters:

@@ -11,17 +11,18 @@ SVG_NS = "http://www.w3.org/2000/svg"
 
 
 def _build_sc_svg(config: GenerationConfig, asymmetry: float) -> str:
-  """Build a centered plus/cross with equal or unequal opposing arms."""
-  if not 0.0 <= asymmetry < 1.0:
-    raise ValueError("sc asymmetry must be in the range [0, 1).")
+  """Build a centered plus/cross with an optionally vertically offset bar."""
+  if not -1.0 < asymmetry < 1.0:
+    raise ValueError("sc asymmetry must be in the range (-1, 1).")
 
   half_span_x = 50.0 * config.target_visible_px / config.canvas_width_px
   half_span_y = 50.0 * config.target_visible_px / config.canvas_height_px
 
-  long_x = half_span_x * (1.0 + asymmetry)
-  short_x = half_span_x * (1.0 - asymmetry)
-  long_y = half_span_y * (1.0 + asymmetry)
-  short_y = half_span_y * (1.0 - asymmetry)
+  # ``sc`` asymmetry describes placement of the horizontal bar, not unequal
+  # arm lengths. Keep the vertical stroke centered and preserve equal left /
+  # right horizontal arms. Positive asymmetry moves the bar upward; negative
+  # asymmetry moves it downward.
+  horizontal_y = 50.0 - (asymmetry * half_span_y)
 
   svg = Element("svg", {
     "xmlns": SVG_NS,
@@ -38,16 +39,16 @@ def _build_sc_svg(config: GenerationConfig, asymmetry: float) -> str:
     "transform": f"rotate({config.rotation_deg} 50 50)",
   })
   SubElement(group, "line", {
-    "x1": f"{50.0 - long_x:.8f}",
-    "y1": "50",
-    "x2": f"{50.0 + short_x:.8f}",
-    "y2": "50",
+    "x1": f"{50.0 - half_span_x:.8f}",
+    "y1": f"{horizontal_y:.8f}",
+    "x2": f"{50.0 + half_span_x:.8f}",
+    "y2": f"{horizontal_y:.8f}",
   })
   SubElement(group, "line", {
     "x1": "50",
-    "y1": f"{50.0 - long_y:.8f}",
+    "y1": f"{50.0 - half_span_y:.8f}",
     "x2": "50",
-    "y2": f"{50.0 + short_y:.8f}",
+    "y2": f"{50.0 + half_span_y:.8f}",
   })
   return tostring(svg, encoding="unicode")
 
@@ -69,8 +70,9 @@ def generate_sc(
   asymmetry = float(asymmetry)
   if shape == "symmetric" and asymmetry != 0.0:
     raise ValueError("A symmetric sc must have asymmetry=0.0.")
-  if shape == "asymmetric" and asymmetry <= 0.0:
-    raise ValueError("An asymmetric sc must have asymmetry greater than 0.0.")
+  # The asymmetric sampling branch may legitimately include zero (for
+  # example, its configured mean or a deterministic coverage probe). In that
+  # case the geometry is simply the centered limit of the branch.
 
   svg = _build_sc_svg(config, asymmetry)
   metadata = {
