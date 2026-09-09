@@ -65,6 +65,34 @@ def main() -> None:
     assert generated.obb_pixels is None
     assert generated.yolo_label is None
     fromstring(generated.svg)
+
+  spec = config.resolve("primitive", "hdc")
+  generator = GENERATOR_REGISTRY[("primitive", "hdc")]
+  sample = config.sample(
+    "primitive", "hdc", np.random.default_rng(4000), seed=4000,
+    overrides={"bar_stem_ratio": 0.5},
+  )
+  generated = generator(spec, sample, GenerationConfig())
+  assert generated.metadata["bar_stem_ratio"] == 0.5
+  assert generated.svg.count("<line") == 2
+  assert generated.obb_pixels is None
+  assert generated.yolo_label is None
+  fromstring(generated.svg)
+
+  spec = config.resolve("primitive", "dc")
+  generator = GENERATOR_REGISTRY[("primitive", "dc")]
+  sample = config.sample(
+    "primitive", "dc", np.random.default_rng(5000), seed=5000,
+    overrides={"bar_stem_ratio": 0.333, "cross_bar_ratio": 0.36, "cross_bar_y": 0.50, "cross_bar_angle_deg": 15.0},
+  )
+  generated = generator(spec, sample, GenerationConfig())
+  assert generated.metadata["cross_bar_ratio"] == 0.36
+  assert generated.metadata["cross_bar_y"] == 0.50
+  assert generated.metadata["cross_bar_angle_deg"] == 15.0
+  assert generated.svg.count("<line") == 3
+  assert generated.obb_pixels is None
+  assert generated.yolo_label is None
+  fromstring(generated.svg)
   print("Sampling-to-SVG pipeline checks passed.")
 
 
