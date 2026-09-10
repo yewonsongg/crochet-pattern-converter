@@ -4,6 +4,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 
 from ..core.sampling.schema import ClassSpec
 from ..core.models import SampledParameters, GeneratedObject, GenerationConfig
+from ..core.svg.stroke import resolve_stroke_width
 
 
 SVG_NS = "http://www.w3.org/2000/svg"
@@ -17,12 +18,13 @@ def generate_ch(
   values = sample.as_dict()
   shape = values.get("shape")
   aspect_ratio = values.get("aspect_ratio")
+  stroke_width = resolve_stroke_width(sample, config, class_name="ch")
   if shape not in {"oval", "circle"}:
     raise ValueError(f"Unsupported ch shape: {shape!r}.")
   if isinstance(aspect_ratio, bool) or not isinstance(aspect_ratio, (int, float)):
     raise ValueError("ch aspect_ratio must be numeric.")
 
-  svg = _build_ch_svg(config, float(aspect_ratio))
+  svg = _build_ch_svg(config, float(aspect_ratio), stroke_width)
   metadata = {
     "class_id": spec.class_id,
     "class_name": spec.class_name,
@@ -31,7 +33,7 @@ def generate_ch(
     "canvas": {"width_px": config.canvas_width_px, "height_px": config.canvas_height_px},
     "target_visible_px": config.target_visible_px,
     "visual_rotation_deg": config.rotation_deg,
-    "stroke_width_normalized": config.stroke_width_normalized,
+    "stroke_width": stroke_width,
   }
   return GeneratedObject(
     class_id=spec.class_id,
@@ -47,7 +49,7 @@ def generate_ch(
   )
 
 
-def _build_ch_svg(config: GenerationConfig, aspect_ratio: float) -> str:
+def _build_ch_svg(config: GenerationConfig, aspect_ratio: float, stroke_width: float) -> str:
   if aspect_ratio <= 0:
     raise ValueError("ch aspect_ratio must be positive.")
 
@@ -69,7 +71,7 @@ def _build_ch_svg(config: GenerationConfig, aspect_ratio: float) -> str:
   group = SubElement(svg, "g", {
     "fill": "none",
     "stroke": "black",
-    "stroke-width": str(config.stroke_width_normalized),
+    "stroke-width": str(stroke_width),
     "transform": f"rotate({config.rotation_deg} 50 50)",
   })
   SubElement(group, "ellipse", {

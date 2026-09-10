@@ -4,6 +4,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 
 from ..core.models import GeneratedObject, GenerationConfig, SampledParameters
 from ..core.sampling.schema import ClassSpec
+from ..core.svg.stroke import resolve_stroke_width
 
 
 CLASS_NAME = "sc"
@@ -14,6 +15,7 @@ def _build_sc_svg(
   config: GenerationConfig,
   asymmetry: float,
   cross_bar_ratio: float,
+  stroke_width: float,
 ) -> str:
   """Build a centered plus/cross with an optionally vertically offset bar."""
   if not -1.0 < asymmetry < 1.0:
@@ -43,7 +45,7 @@ def _build_sc_svg(
   group = SubElement(svg, "g", {
     "fill": "none",
     "stroke": "black",
-    "stroke-width": str(config.stroke_width_normalized),
+    "stroke-width": str(stroke_width),
     "stroke-linecap": "round",
     "stroke-linejoin": "round",
     "transform": f"rotate({config.rotation_deg} 50 50)",
@@ -73,6 +75,7 @@ def generate_sc(
   shape = values.get("shape")
   asymmetry = values.get("asymmetry")
   cross_bar_ratio = values.get("cross_bar_ratio")
+  stroke_width = resolve_stroke_width(sample, config, class_name="sc")
   if shape not in {"symmetric", "asymmetric"}:
     raise ValueError(f"Unsupported sc shape: {shape!r}.")
   if isinstance(asymmetry, bool) or not isinstance(asymmetry, (int, float)):
@@ -88,7 +91,7 @@ def generate_sc(
   # example, its configured mean or a deterministic coverage probe). In that
   # case the geometry is simply the centered limit of the branch.
 
-  svg = _build_sc_svg(config, asymmetry, cross_bar_ratio)
+  svg = _build_sc_svg(config, asymmetry, cross_bar_ratio, stroke_width)
   metadata = {
     "class_id": spec.class_id,
     "class_name": spec.class_name,
@@ -101,7 +104,7 @@ def generate_sc(
     },
     "target_visible_px": config.target_visible_px,
     "visual_rotation_deg": config.rotation_deg,
-    "stroke_width_normalized": config.stroke_width_normalized,
+    "stroke_width": stroke_width,
   }
   return GeneratedObject(
     class_id=spec.class_id,

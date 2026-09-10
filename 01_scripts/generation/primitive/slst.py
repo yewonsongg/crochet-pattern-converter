@@ -4,12 +4,13 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 
 from ..core.models import GeneratedObject, GenerationConfig, SampledParameters
 from ..core.sampling.schema import ClassSpec
+from ..core.svg.stroke import resolve_stroke_width
 
 
 SVG_NS = "http://www.w3.org/2000/svg"
 
 
-def _build_slst_svg(config: GenerationConfig, aspect_ratio: float) -> str:
+def _build_slst_svg(config: GenerationConfig, aspect_ratio: float, stroke_width: float) -> str:
   if aspect_ratio <= 0:
     raise ValueError("slst aspect_ratio must be positive.")
 
@@ -31,7 +32,7 @@ def _build_slst_svg(config: GenerationConfig, aspect_ratio: float) -> str:
   group = SubElement(svg, "g", {
     "fill": "black",
     "stroke": "black",
-    "stroke-width": str(config.stroke_width_normalized),
+    "stroke-width": str(stroke_width),
     "transform": f"rotate({config.rotation_deg} 50 50)",
   })
   SubElement(group, "ellipse", {
@@ -53,12 +54,13 @@ def generate_slst(
   values = sample.as_dict()
   shape = values.get("shape")
   aspect_ratio = values.get("aspect_ratio")
+  stroke_width = resolve_stroke_width(sample, config, class_name="slst")
   if shape not in {"oval", "circle"}:
     raise ValueError(f"Unsupported slst shape: {shape!r}.")
   if isinstance(aspect_ratio, bool) or not isinstance(aspect_ratio, (int, float)):
     raise ValueError("slst aspect_ratio must be numeric.")
 
-  svg = _build_slst_svg(config, float(aspect_ratio))
+  svg = _build_slst_svg(config, float(aspect_ratio), stroke_width)
   metadata = {
     "class_id": spec.class_id,
     "class_name": spec.class_name,
@@ -67,7 +69,7 @@ def generate_slst(
     "canvas": {"width_px": config.canvas_width_px, "height_px": config.canvas_height_px},
     "target_visible_px": config.target_visible_px,
     "visual_rotation_deg": config.rotation_deg,
-    "stroke_width_normalized": config.stroke_width_normalized,
+    "stroke_width": stroke_width,
   }
   return GeneratedObject(
     class_id=spec.class_id,

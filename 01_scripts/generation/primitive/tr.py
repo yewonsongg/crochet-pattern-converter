@@ -6,6 +6,7 @@ from typing import Any
 from ..core.models import GeneratedObject, GenerationConfig, SampledParameters
 from ..core.sampling.schema import ClassSpec
 from ..core.svg.bar_stem import build_bar_stem_svg
+from ..core.svg.stroke import resolve_stroke_width
 
 
 CLASS_NAME = "tr"
@@ -18,7 +19,7 @@ def generate_tr(spec: ClassSpec, sample: SampledParameters, config: GenerationCo
   cross_bar_ratio = _finite_number(values.get("cross_bar_ratio"), "cross_bar_ratio")
   cross_bar_y = _finite_number(values.get("cross_bar_y"), "cross_bar_y")
   cross_bar_angle_deg = _finite_number(values.get("cross_bar_angle_deg"), "cross_bar_angle_deg")
-  stroke_width = _finite_number(values.get("stroke_width", config.stroke_width_normalized), "stroke_width")
+  stroke_width = resolve_stroke_width(sample, config, class_name="tr")
   _validate_values(bar_stem_ratio, cross_bar_ratio, cross_bar_y, cross_bar_angle_deg, stroke_width)
 
   geometry = build_bar_stem_svg(

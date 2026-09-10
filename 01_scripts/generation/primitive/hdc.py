@@ -6,6 +6,7 @@ from typing import Any
 from ..core.models import GeneratedObject, GenerationConfig, SampledParameters
 from ..core.sampling.schema import ClassSpec
 from ..core.svg.bar_stem import build_bar_stem_svg
+from ..core.svg.stroke import resolve_stroke_width
 
 
 CLASS_NAME = "hdc"
@@ -15,7 +16,7 @@ def generate_hdc(spec: ClassSpec, sample: SampledParameters, config: GenerationC
   """Generate SVG for one sampled half-double-crochet primitive."""
   values = sample.as_dict()
   bar_stem_ratio = _finite_number(values.get("bar_stem_ratio"), "bar_stem_ratio")
-  stroke_width = _finite_number(values.get("stroke_width", config.stroke_width_normalized), "stroke_width")
+  stroke_width = resolve_stroke_width(sample, config, class_name="hdc")
   if bar_stem_ratio <= 0 or stroke_width <= 0:
     raise ValueError("hdc bar_stem_ratio and stroke_width must be positive.")
 
