@@ -24,16 +24,25 @@ classes:
             cases:
               oval:
                 type: truncated_normal
-                mean: 1.50
+                mean: 1.65
                 std:  0.08
-                min:  1.25
-                max:  1.75
+                min:  1.30
+                max:  1.85
               circle:
                 type: truncated_normal
                 mean: 1.00
                 std:  0.04
                 min:  0.92
                 max:  1.08
+
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
 
     slst:
       parameters:
@@ -90,6 +99,31 @@ classes:
                 min:  -0.25
                 max:  0.25
 
+        cross_bar_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [shape]
+            cases:
+              symmetric:
+                type: fixed
+                value: 1.0
+              asymmetric:
+                type: truncated_normal
+                mean: 0.80
+                std: 0.10
+                min: 0.50
+                max: 0.95
+
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
+
     hdc:
       parameters:
         bar_stem_ratio:
@@ -118,6 +152,7 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+
         stroke_width:
           kind: continuous
           distribution: 
@@ -155,6 +190,7 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+
         cross_bar_ratio:
           kind: continuous
           distribution:
@@ -163,6 +199,7 @@ classes:
             std: 0.04
             min: 0.28
             max: 0.45
+
         cross_bar_y:
           kind: continuous
           distribution:
@@ -171,6 +208,7 @@ classes:
             std: 0.08
             min: 0.42
             max: 0.62
+
         cross_bar_angle_deg:
           kind: continuous
           distribution:
@@ -179,6 +217,7 @@ classes:
             std: 15.0
             min: -45.0
             max: 45.0
+
         stroke_width:
           kind: continuous
           distribution: 
@@ -216,6 +255,7 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+
         cross_bar_ratio:
           kind: continuous
           distribution:
@@ -224,6 +264,7 @@ classes:
             std: 0.04
             min: 0.28
             max: 0.45
+
         cross_bar_y:
           kind: continuous
           distribution:
@@ -232,6 +273,7 @@ classes:
             std: 0.08
             min: 0.42
             max: 0.62
+
         cross_bar_angle_deg:
           kind: continuous
           distribution:
@@ -240,6 +282,7 @@ classes:
             std: 15.0
             min: -45.0
             max: 45.0
+            
         stroke_width:
           kind: continuous
           distribution: 
@@ -277,6 +320,7 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+
         cross_bar_ratio:
           kind: continuous
           distribution:
@@ -285,6 +329,7 @@ classes:
             std: 0.04
             min: 0.28
             max: 0.45
+
         cross_bar_y:
           kind: continuous
           distribution:
@@ -293,6 +338,7 @@ classes:
             std: 0.08
             min: 0.42
             max: 0.62
+
         cross_bar_angle_deg:
           kind: continuous
           distribution:
@@ -301,6 +347,7 @@ classes:
             std: 15.0
             min: -45.0
             max: 45.0
+            
         stroke_width:
           kind: continuous
           distribution: 
@@ -607,6 +654,7 @@ classes:
             std:  0.08
             min:  0.80
             max:  1.20
+
         opening_angle_deg:
           kind: continuous
           distribution: 
@@ -615,6 +663,7 @@ classes:
             std: 5.0
             min: 45.0
             max: 75.0
+
         closure_offset:
           kind: continuous
           distribution: 
@@ -630,6 +679,7 @@ classes:
           count: 3
           inherit_generator: true
           arrangement: triangular
+
         closure:
           class: slst
           count: 1
@@ -703,6 +753,7 @@ classes:
             std:  0.05
             min:  0.90
             max:  1.10
+
         curvature:
           kind: continuous
           distribution: 
@@ -711,6 +762,15 @@ classes:
             std:  0.05
             min:  0.40
             max:  0.60   
+
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
 
     jb:
       parameters:

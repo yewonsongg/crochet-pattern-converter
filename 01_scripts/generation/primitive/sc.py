@@ -10,13 +10,23 @@ CLASS_NAME = "sc"
 SVG_NS = "http://www.w3.org/2000/svg"
 
 
-def _build_sc_svg(config: GenerationConfig, asymmetry: float) -> str:
+def _build_sc_svg(
+  config: GenerationConfig,
+  asymmetry: float,
+  cross_bar_ratio: float,
+) -> str:
   """Build a centered plus/cross with an optionally vertically offset bar."""
   if not -1.0 < asymmetry < 1.0:
     raise ValueError("sc asymmetry must be in the range (-1, 1).")
+  if not 0.0 < cross_bar_ratio <= 1.0:
+    raise ValueError("sc cross_bar_ratio must be in the range (0, 1].")
 
-  half_span_x = 50.0 * config.target_visible_px / config.canvas_width_px
   half_span_y = 50.0 * config.target_visible_px / config.canvas_height_px
+  # The vertical stroke establishes the target visible dimension. The
+  # horizontal bar is scaled from that same pixel span, then converted into
+  # the SVG viewBox's x-axis units for non-square canvases.
+  horizontal_span_px = config.target_visible_px * cross_bar_ratio
+  half_span_x = 50.0 * horizontal_span_px / config.canvas_width_px
 
   # ``sc`` asymmetry describes placement of the horizontal bar, not unequal
   # arm lengths. Keep the vertical stroke centered and preserve equal left /
@@ -62,24 +72,29 @@ def generate_sc(
   values = sample.as_dict()
   shape = values.get("shape")
   asymmetry = values.get("asymmetry")
+  cross_bar_ratio = values.get("cross_bar_ratio")
   if shape not in {"symmetric", "asymmetric"}:
     raise ValueError(f"Unsupported sc shape: {shape!r}.")
   if isinstance(asymmetry, bool) or not isinstance(asymmetry, (int, float)):
     raise ValueError("sc asymmetry must be numeric.")
+  if isinstance(cross_bar_ratio, bool) or not isinstance(cross_bar_ratio, (int, float)):
+    raise ValueError("sc cross_bar_ratio must be numeric.")
 
   asymmetry = float(asymmetry)
+  cross_bar_ratio = float(cross_bar_ratio)
   if shape == "symmetric" and asymmetry != 0.0:
     raise ValueError("A symmetric sc must have asymmetry=0.0.")
   # The asymmetric sampling branch may legitimately include zero (for
   # example, its configured mean or a deterministic coverage probe). In that
   # case the geometry is simply the centered limit of the branch.
 
-  svg = _build_sc_svg(config, asymmetry)
+  svg = _build_sc_svg(config, asymmetry, cross_bar_ratio)
   metadata = {
     "class_id": spec.class_id,
     "class_name": spec.class_name,
     "shape": shape,
     "asymmetry": asymmetry,
+    "cross_bar_ratio": cross_bar_ratio,
     "canvas": {
       "width_px": config.canvas_width_px,
       "height_px": config.canvas_height_px,
