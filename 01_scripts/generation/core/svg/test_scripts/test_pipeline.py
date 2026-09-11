@@ -16,7 +16,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
 
 from generation.core.models import GeneratedObject, GenerationConfig
 from generation.core.sampling import load_sampling_config
-from generation.registry import GENERATOR_REGISTRY
+from generation.registry import COMPOSITE_GENERATORS, GENERATOR_REGISTRY
 
 
 def main() -> None:
@@ -26,8 +26,14 @@ def main() -> None:
   )
   for index, ((class_group, class_name), generator) in enumerate(GENERATOR_REGISTRY.items()):
     spec = config.resolve(class_group, class_name)
-    sample = config.sample(class_group, class_name, np.random.default_rng(1234 + index), seed=1234 + index)
-    generated = generator(spec, sample, GenerationConfig())
+    rng = np.random.default_rng(1234 + index)
+    sample = config.sample(class_group, class_name, rng, seed=1234 + index)
+    generator_input = (
+      config.realize_components(class_group, class_name, sample, rng)
+      if (class_group, class_name) in COMPOSITE_GENERATORS
+      else sample
+    )
+    generated = generator(spec, generator_input, GenerationConfig())
     assert isinstance(generated, GeneratedObject)
     assert generated.svg
     fromstring(generated.svg)

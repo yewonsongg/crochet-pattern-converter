@@ -5,7 +5,8 @@ from typing import Any, Literal, Mapping
 
 import numpy as np
 
-from ..models import ConfigIdentity, SampledParameters
+from ..models import CompositeSample, ConfigIdentity, SampledParameters
+from .components import realize_component_prototypes
 from .resolver import resolve_class_spec
 from .schema import ClassSpec
 from .sampler import ClassSampler
@@ -223,4 +224,25 @@ class SamplingConfig:
       seed=seed,
       overrides=overrides,
       case_id=case_id,
+    )
+
+  def realize_components(
+    self,
+    class_group: str,
+    class_name: str,
+    parent_sample: SampledParameters,
+    rng: np.random.Generator,
+  ) -> CompositeSample:
+    """Sample one reusable child prototype for each active component role.
+
+    This is an explicit phase: :meth:`sample` continues to return only the
+    parent sample. Component occurrence counts are retained as reuse metadata
+    and do not cause repeated child sampling.
+    """
+
+    return realize_component_prototypes(
+      sampling_config=self,
+      owner_spec=self.resolve(class_group, class_name),
+      parent_sample=parent_sample,
+      rng=rng,
     )

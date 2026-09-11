@@ -164,7 +164,7 @@ def sample_class(
   active: dict[str, ParameterSpec] = dict(spec.parameters)
 
   variant: str | None = None
-  if "variant" in active:
+  if "variant" in active and spec.variants:
     variant_parameter = active.pop("variant")
 
     if "variant" in overrides:

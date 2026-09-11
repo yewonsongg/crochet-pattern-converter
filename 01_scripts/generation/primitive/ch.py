@@ -53,15 +53,6 @@ def _build_ch_svg(config: GenerationConfig, aspect_ratio: float, stroke_width: f
   if aspect_ratio <= 0:
     raise ValueError("ch aspect_ratio must be positive.")
 
-  width_px = config.target_visible_px
-  height_px = config.target_visible_px
-  if aspect_ratio >= 1.0:
-    height_px /= aspect_ratio
-  else:
-    width_px *= aspect_ratio
-
-  width_normalized = 100.0 * width_px / config.canvas_width_px
-  height_normalized = 100.0 * height_px / config.canvas_height_px
   svg = Element("svg", {
     "xmlns": SVG_NS,
     "width": f"{config.canvas_width_px}px",
@@ -74,11 +65,47 @@ def _build_ch_svg(config: GenerationConfig, aspect_ratio: float, stroke_width: f
     "stroke-width": str(stroke_width),
     "transform": f"rotate({config.rotation_deg} 50 50)",
   })
-  SubElement(group, "ellipse", {
-    "fill": "none",
-    "cx": "50",
-    "cy": "50",
-    "rx": f"{width_normalized / 2:.8f}",
-    "ry": f"{height_normalized / 2:.8f}",
-  })
+  append_ch_ellipse(
+    group,
+    config=config,
+    center=(50.0, 50.0),
+    target_visible_px=config.target_visible_px,
+    aspect_ratio=aspect_ratio,
+  )
   return tostring(svg, encoding="unicode")
+
+
+def append_ch_ellipse(
+  parent: Element,
+  *,
+  config: GenerationConfig,
+  center: tuple[float, float],
+  target_visible_px: float,
+  aspect_ratio: float,
+  rotation_deg: float = 0.0,
+) -> Element:
+  """Append reusable chain-stitch ellipse geometry to an SVG parent."""
+
+  if target_visible_px <= 0:
+    raise ValueError("ch target_visible_px must be positive.")
+  if aspect_ratio <= 0:
+    raise ValueError("ch aspect_ratio must be positive.")
+
+  width_px = float(target_visible_px)
+  height_px = float(target_visible_px)
+  if aspect_ratio >= 1.0:
+    height_px /= aspect_ratio
+  else:
+    width_px *= aspect_ratio
+
+  cx, cy = center
+  attributes = {
+    "fill": "none",
+    "cx": f"{cx:.8f}",
+    "cy": f"{cy:.8f}",
+    "rx": f"{50.0 * width_px / config.canvas_width_px:.8f}",
+    "ry": f"{50.0 * height_px / config.canvas_height_px:.8f}",
+  }
+  if rotation_deg:
+    attributes["transform"] = f"rotate({rotation_deg:.8f} {cx:.8f} {cy:.8f})"
+  return SubElement(parent, "ellipse", attributes)

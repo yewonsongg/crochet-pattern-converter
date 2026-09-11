@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M50,77c-15.188,0-27.5-12.2-27.5-27.25s12.312-27.25,27.5-27.25" fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2"/>
+  <path d="M50,20c15.188,0,27.5,12.76,27.5,28.5s-12.312,28.5-27.5,28.5" fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2"/>
+  <path d="M50,80c-16.569,0-30-13.431-30-30s13.431-30,30-30" fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2"/>
+  <path d="M50,17c16.569,0,30,14.103,30,31.5s-13.431,31.5-30,31.5" fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2"/>
+</svg>

@@ -66,6 +66,15 @@ def validate_sampling_config(parsed_source: Any) -> Mapping[str, Any]:
     for group in classes.values()
     for class_name in group
   }
+  class_sources: dict[str, tuple[str, Mapping[str, Any]]] = {}
+  for group_name, group in classes.items():
+    for class_name, spec in group.items():
+      if class_name in class_sources:
+        raise SamplingValidationError(
+          f"Sampling class name is ambiguous across families: {class_name!r}."
+        )
+      if isinstance(spec, Mapping):
+        class_sources[class_name] = (group_name, spec)
 
   for group_name, group in classes.items():
     for class_name, spec in group.items():
@@ -73,6 +82,7 @@ def validate_sampling_config(parsed_source: Any) -> Mapping[str, Any]:
         spec = spec,
         path = f"classes.{group_name}.{class_name}",
         known= known,
+        class_sources=class_sources,
       )
 
   return parsed_source
@@ -330,7 +340,8 @@ def _schema(schema):
 def _class(
   spec: Any, 
   path: str, 
-  known: set[str]
+  known: set[str],
+  class_sources: Mapping[str, tuple[str, Mapping[str, Any]]],
 ):
   """Validate one class sampling specification.
 
@@ -392,6 +403,8 @@ def _class(
       components = bundle.get("components", {}), 
       path = f"{path}.variants.{variant}.components", 
       known = known,
+      parameters = active_params,
+      class_sources = class_sources,
     )
 
   variant_parameter = params.get("variant")
@@ -419,6 +432,8 @@ def _class(
     components = spec.get("components", {}), 
     path = f"{path}.components", 
     known = known,
+    parameters = params,
+    class_sources = class_sources,
   )
 
   topology = spec.get("topology", {})
@@ -728,11 +743,15 @@ def _components(
   components: Any, 
   path: str, 
   known: set[str],
+  parameters: Mapping[str, Any],
+  class_sources: Mapping[str, tuple[str, Mapping[str, Any]]],
 ) -> None:
 
   """Validate component declarations and referenced class names.
 
-  Each component declaration must be a mapping. If it includes a ``class`` field, that field must contain the name of a known ontology class.
+  Each component declaration must identify either one fixed class or a list of
+  allowed classes selected by the same-named parent parameter. Optional count,
+  arrangement, and generator-inheritance fields are also validated.
 
   Args:
     components: Parsed component declarations.
@@ -756,13 +775,214 @@ def _components(
     if not isinstance(component, Mapping):
       raise SamplingValidationError(f"{path}.{name} must be a mapping.")
 
-    if "class" not in component:
+    component_path = f"{path}.{name}"
+    supported = {
+      "class", "allowed_classes", "count", "arrangement", "inherit_generator", "sampling"
+    }
+    unknown = set(component) - supported
+    if unknown:
+      raise SamplingValidationError(
+        f"{component_path} contains unsupported field(s): {sorted(unknown)!r}."
+      )
+
+    has_class = "class" in component
+    has_allowed = "allowed_classes" in component
+    if has_class == has_allowed:
+      raise SamplingValidationError(
+        f"{component_path} must declare exactly one of class or allowed_classes."
+      )
+
+    if has_class:
+      component_class = component["class"]
+      if not isinstance(component_class, str) or not component_class:
+        raise SamplingValidationError(
+          f"{component_path}.class must be a non-empty class name string."
+        )
+      if component_class not in known:
+        raise SamplingValidationError(
+          f"{component_path}.class references unknown class: {component_class!r}."
+        )
+    else:
+      allowed_classes = component["allowed_classes"]
+      if not isinstance(allowed_classes, list) or not allowed_classes:
+        raise SamplingValidationError(
+          f"{component_path}.allowed_classes must be a non-empty list."
+        )
+      if any(not isinstance(item, str) or not item for item in allowed_classes):
+        raise SamplingValidationError(
+          f"{component_path}.allowed_classes entries must be non-empty class names."
+        )
+      if len(set(allowed_classes)) != len(allowed_classes):
+        raise SamplingValidationError(
+          f"{component_path}.allowed_classes must not contain duplicates."
+        )
+      unknown_classes = sorted(set(allowed_classes) - known)
+      if unknown_classes:
+        raise SamplingValidationError(
+          f"{component_path}.allowed_classes references unknown classes: {unknown_classes!r}."
+        )
+      selector = parameters.get(name)
+      selector_distribution = (
+        selector.get("distribution")
+        if isinstance(selector, Mapping)
+        else None
+      )
+      probabilities = (
+        selector_distribution.get("probabilities")
+        if isinstance(selector_distribution, Mapping)
+        and selector_distribution.get("type") == "categorical"
+        else None
+      )
+      if not isinstance(probabilities, Mapping):
+        raise SamplingValidationError(
+          f"{component_path} requires categorical parent parameter {name!r} for class selection."
+        )
+      unsupported = sorted(set(probabilities) - set(allowed_classes))
+      if unsupported:
+        raise SamplingValidationError(
+          f"{component_path} selector {name!r} can produce disallowed classes: {unsupported!r}."
+        )
+
+    if "count" in component:
+      count = component["count"]
+      if isinstance(count, bool) or not isinstance(count, (int, str)):
+        raise SamplingValidationError(
+          f"{component_path}.count must be a positive integer or parameter name."
+        )
+      if isinstance(count, int) and count <= 0:
+        raise SamplingValidationError(f"{component_path}.count must be positive.")
+      if isinstance(count, str) and (not count or count not in parameters):
+        raise SamplingValidationError(
+          f"{component_path}.count references unknown parameter: {count!r}."
+        )
+
+    if "arrangement" in component:
+      arrangement = component["arrangement"]
+      if not isinstance(arrangement, str) or not arrangement:
+        raise SamplingValidationError(
+          f"{component_path}.arrangement must be a non-empty string."
+        )
+
+    if "inherit_generator" in component and not isinstance(component["inherit_generator"], bool):
+      raise SamplingValidationError(
+        f"{component_path}.inherit_generator must be a boolean."
+      )
+
+    _component_sampling_policy(
+      component=component,
+      path=component_path,
+      class_sources=class_sources,
+    )
+
+
+def _component_sampling_policy(
+  *,
+  component: Mapping[str, Any],
+  path: str,
+  class_sources: Mapping[str, tuple[str, Mapping[str, Any]]],
+) -> None:
+  """Validate partial child-parameter distribution replacements."""
+
+  sampling = component.get("sampling")
+  if sampling is None:
+    return
+  if not isinstance(sampling, Mapping) or not sampling:
+    raise SamplingValidationError(f"{path}.sampling must be a non-empty mapping.")
+
+  policies: list[tuple[str, str, Mapping[str, Any]]] = []
+  if "class" in component:
+    if "by_class" in sampling:
+      raise SamplingValidationError(
+        f"{path}.sampling cannot use by_class for a fixed component."
+      )
+    policies.append((component["class"], f"{path}.sampling", sampling))
+  else:
+    if set(sampling) != {"by_class"}:
+      raise SamplingValidationError(
+        f"{path}.sampling must contain only by_class for a dynamic component."
+      )
+    by_class = sampling["by_class"]
+    if not isinstance(by_class, Mapping) or not by_class:
+      raise SamplingValidationError(
+        f"{path}.sampling.by_class must be a non-empty mapping."
+      )
+    for class_name in by_class:
+      if not isinstance(class_name, str) or not class_name:
+        raise SamplingValidationError(
+          f"{path}.sampling.by_class contains an invalid class name: {class_name!r}."
+        )
+    allowed = set(component["allowed_classes"])
+    unsupported = sorted(set(by_class) - allowed)
+    if unsupported:
+      raise SamplingValidationError(
+        f"{path}.sampling.by_class contains classes outside allowed_classes: {unsupported!r}."
+      )
+    for class_name, policy in by_class.items():
+      branch_path = f"{path}.sampling.by_class.{class_name}"
+      if not isinstance(policy, Mapping) or not policy:
+        raise SamplingValidationError(f"{branch_path} must be a non-empty mapping.")
+      policies.append((class_name, branch_path, policy))
+
+  for child_name, policy_path, policy in policies:
+    child_source_entry = class_sources.get(child_name)
+    if child_source_entry is None:
+      # Unknown component classes are reported by the declaration validator.
       continue
+    child_group, child_source = child_source_entry
+    if child_group != "primitive":
+      raise SamplingValidationError(
+        f"{policy_path} targets non-primitive child class {child_group}.{child_name}."
+      )
+    child_parameters = child_source.get("parameters", {})
+    if not isinstance(child_parameters, Mapping):
+      raise SamplingValidationError(
+        f"classes.{child_group}.{child_name}.parameters must be a mapping."
+      )
 
-    component_class = component["class"]
+    effective_parameters = dict(child_parameters)
+    for parameter_name, replacement in policy.items():
+      parameter_path = f"{policy_path}.{parameter_name}"
+      if not isinstance(parameter_name, str) or not parameter_name:
+        raise SamplingValidationError(
+          f"{policy_path} contains an invalid parameter name: {parameter_name!r}."
+        )
+      if parameter_name == "stroke_width":
+        raise SamplingValidationError(
+          f"{parameter_path} cannot replace inherited parameter 'stroke_width'."
+        )
+      base = child_parameters.get(parameter_name)
+      if base is None:
+        raise SamplingValidationError(
+          f"{parameter_path} references unknown top-level parameter on primitive.{child_name}."
+        )
+      if not isinstance(base, Mapping):
+        raise SamplingValidationError(
+          f"classes.primitive.{child_name}.parameters.{parameter_name} must be a mapping."
+        )
+      if not isinstance(replacement, Mapping):
+        raise SamplingValidationError(f"{parameter_path} must be a mapping.")
+      base_kind = base.get("kind")
+      replacement_kind = replacement.get("kind")
+      if base_kind == "derived":
+        raise SamplingValidationError(
+          f"{parameter_path} cannot replace derived child parameter {parameter_name!r}."
+        )
+      if replacement_kind != base_kind:
+        raise SamplingValidationError(
+          f"{parameter_path}.kind must match primitive.{child_name} kind {base_kind!r}."
+        )
+      effective_parameters[parameter_name] = replacement
 
-    if not isinstance(component_class, str) or not component_class:
-      raise SamplingValidationError(f"{path}.{name}.class must be a non-empty class name string.")
-    
-    if component_class not in known:
-      raise SamplingValidationError(f"{path}.{name}.class references unknown class: {component_class!r}.")
+    # Revalidate the complete effective schema so replacement dependencies and
+    # unchanged dependent parameters agree with one another.
+    for parameter_name, parameter in effective_parameters.items():
+      parameter_path = (
+        f"{policy_path}.{parameter_name}"
+        if parameter_name in policy
+        else f"classes.primitive.{child_name}.parameters.{parameter_name}"
+      )
+      _parameter(
+        value=parameter,
+        path=parameter_path,
+        parameters=effective_parameters,
+      )

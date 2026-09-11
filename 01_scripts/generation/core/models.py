@@ -105,6 +105,38 @@ class SampledParameters:
 
 
 @dataclass(frozen=True)
+class ComponentPrototype:
+  """One sampled child prototype reused by a component role.
+
+  ``occurrence_count`` describes how many placements may reuse the prototype;
+  it never causes additional child samples to be drawn. Values inherited from
+  the owning sample are kept separately so inheritance remains distinguishable
+  from the child's own sampling schema. ``sampling_policy`` contains only the
+  parameter replacements selected for this resolved role and child class;
+  ``replaced_parameters`` preserves their declaration order for provenance.
+  """
+
+  role: str
+  class_group: str
+  class_name: str
+  declaration: dict[str, Any]
+  occurrence_count: int | None
+  arrangement: str | None
+  inherited_parameters: dict[str, Any]
+  sample: SampledParameters
+  sampling_policy: dict[str, Any] = field(default_factory=dict)
+  replaced_parameters: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class CompositeSample:
+  """A parent sample and one reusable prototype per component role."""
+
+  parent: SampledParameters
+  prototypes: dict[str, ComponentPrototype] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class GenerationConfig:
   """Rendering configuration for one generated symbol.
 
