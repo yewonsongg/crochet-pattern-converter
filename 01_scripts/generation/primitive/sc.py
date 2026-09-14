@@ -1,70 +1,12 @@
 from __future__ import annotations
 
-from xml.etree.ElementTree import Element, SubElement, tostring
-
 from ..core.models import GeneratedObject, GenerationConfig, SampledParameters
 from ..core.sampling.schema import ClassSpec
+from ..core.svg.stitch import build_centered_stitch_svg
 from ..core.svg.stroke import resolve_stroke_width
 
 
 CLASS_NAME = "sc"
-SVG_NS = "http://www.w3.org/2000/svg"
-
-
-def _build_sc_svg(
-  config: GenerationConfig,
-  asymmetry: float,
-  cross_bar_ratio: float,
-  stroke_width: float,
-) -> str:
-  """Build a centered plus/cross with an optionally vertically offset bar."""
-  if not -1.0 < asymmetry < 1.0:
-    raise ValueError("sc asymmetry must be in the range (-1, 1).")
-  if not 0.0 < cross_bar_ratio <= 1.0:
-    raise ValueError("sc cross_bar_ratio must be in the range (0, 1].")
-
-  half_span_y = 50.0 * config.target_visible_px / config.canvas_height_px
-  # The vertical stroke establishes the target visible dimension. The
-  # horizontal bar is scaled from that same pixel span, then converted into
-  # the SVG viewBox's x-axis units for non-square canvases.
-  horizontal_span_px = config.target_visible_px * cross_bar_ratio
-  half_span_x = 50.0 * horizontal_span_px / config.canvas_width_px
-
-  # ``sc`` asymmetry describes placement of the horizontal bar, not unequal
-  # arm lengths. Keep the vertical stroke centered and preserve equal left /
-  # right horizontal arms. Positive asymmetry moves the bar upward; negative
-  # asymmetry moves it downward.
-  horizontal_y = 50.0 - (asymmetry * half_span_y)
-
-  svg = Element("svg", {
-    "xmlns": SVG_NS,
-    "width": f"{config.canvas_width_px}px",
-    "height": f"{config.canvas_height_px}px",
-    "viewBox": "0 0 100 100",
-  })
-  group = SubElement(svg, "g", {
-    "fill": "none",
-    "stroke": "black",
-    "stroke-width": str(stroke_width),
-    "stroke-linecap": "round",
-    "stroke-linejoin": "round",
-    "transform": f"rotate({config.rotation_deg} 50 50)",
-  })
-  SubElement(group, "line", {
-    "x1": f"{50.0 - half_span_x:.8f}",
-    "y1": f"{horizontal_y:.8f}",
-    "x2": f"{50.0 + half_span_x:.8f}",
-    "y2": f"{horizontal_y:.8f}",
-  })
-  SubElement(group, "line", {
-    "x1": "50",
-    "y1": f"{50.0 - half_span_y:.8f}",
-    "x2": "50",
-    "y2": f"{50.0 + half_span_y:.8f}",
-  })
-  return tostring(svg, encoding="unicode")
-
-
 def generate_sc(
   spec: ClassSpec,
   sample: SampledParameters,
@@ -91,7 +33,12 @@ def generate_sc(
   # example, its configured mean or a deterministic coverage probe). In that
   # case the geometry is simply the centered limit of the branch.
 
-  svg = _build_sc_svg(config, asymmetry, cross_bar_ratio, stroke_width)
+  svg, _ = build_centered_stitch_svg(
+    class_name=CLASS_NAME,
+    sampled_values=values,
+    config=config,
+    stroke_width=stroke_width,
+  )
   metadata = {
     "class_id": spec.class_id,
     "class_name": spec.class_name,

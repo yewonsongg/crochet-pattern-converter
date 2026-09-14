@@ -5,6 +5,7 @@ from .primitive.hdc import generate_hdc
 from .primitive.dc import generate_dc
 from .primitive.tr import generate_tr
 from .primitive.dtr import generate_dtr
+from .compound.together import generate_together
 from .instructive.ring import generate_ring
 
 
@@ -16,12 +17,14 @@ GENERATOR_REGISTRY = {
   ("primitive", "dc"): generate_dc,
   ("primitive", "tr"): generate_tr,
   ("primitive", "dtr"): generate_dtr,
+  ("compound", "together"): generate_together,
   ("instructive", "ring"): generate_ring,
 }
 
 # These generators consume the explicit CompositeSample produced by
 # SamplingConfig.realize_components(), rather than a bare parent sample.
 COMPOSITE_GENERATORS = {
+  ("compound", "together"),
   ("instructive", "ring"),
 }
 
