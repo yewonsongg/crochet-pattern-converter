@@ -346,6 +346,24 @@ def sample_class(
   for name, component in components.items():
     item = dict(component.raw)
 
+    activation = item.get("when")
+    if activation is not None:
+      if not isinstance(activation, Mapping):
+        raise ValueError(f"components.{name}.when must be a mapping.")
+      if set(activation) != {"parameter", "equals"}:
+        raise ValueError(
+          f"components.{name}.when must contain exactly parameter and equals."
+        )
+      selector_name = activation.get("parameter")
+      if not isinstance(selector_name, str) or selector_name not in context:
+        raise ValueError(
+          f"components.{name}.when references unavailable parameter {selector_name!r}."
+        )
+      selected = context[selector_name]
+      expected = activation.get("equals")
+      if type(selected) is not type(expected) or selected != expected:
+        continue
+
     for key, value in item.items():
       if isinstance(value, str) and value in context:
         item[key] = context[value]

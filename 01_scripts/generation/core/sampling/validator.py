@@ -777,7 +777,8 @@ def _components(
 
     component_path = f"{path}.{name}"
     supported = {
-      "class", "allowed_classes", "count", "arrangement", "inherit_generator", "sampling"
+      "class", "allowed_classes", "count", "arrangement", "inherit_generator",
+      "sampling", "when",
     }
     unknown = set(component) - supported
     if unknown:
@@ -867,6 +868,47 @@ def _components(
       raise SamplingValidationError(
         f"{component_path}.inherit_generator must be a boolean."
       )
+
+    if "when" in component:
+      activation = component["when"]
+      activation_path = f"{component_path}.when"
+      if not isinstance(activation, Mapping) or not activation:
+        raise SamplingValidationError(
+          f"{activation_path} must be a non-empty mapping."
+        )
+      if set(activation) != {"parameter", "equals"}:
+        raise SamplingValidationError(
+          f"{activation_path} must contain exactly parameter and equals."
+        )
+      selector_name = activation["parameter"]
+      if not isinstance(selector_name, str) or not selector_name:
+        raise SamplingValidationError(
+          f"{activation_path}.parameter must be a non-empty string."
+        )
+      selector = parameters.get(selector_name)
+      selector_distribution = (
+        selector.get("distribution")
+        if isinstance(selector, Mapping)
+        else None
+      )
+      probabilities = (
+        selector_distribution.get("probabilities")
+        if isinstance(selector_distribution, Mapping)
+        and selector_distribution.get("type") == "categorical"
+        else None
+      )
+      if not isinstance(probabilities, Mapping):
+        raise SamplingValidationError(
+          f"{activation_path}.parameter must reference a direct categorical parent parameter."
+        )
+      expected = activation["equals"]
+      if not any(
+        type(candidate) is type(expected) and candidate == expected
+        for candidate in probabilities
+      ):
+        raise SamplingValidationError(
+          f"{activation_path}.equals is not reachable from parameter {selector_name!r}."
+        )
 
     _component_sampling_policy(
       component=component,

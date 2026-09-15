@@ -112,7 +112,7 @@ def test_dynamic_component_class_selection() -> None:
   parent = _sample(config, "compound", "together", 400, {
     "stitch": "dc",
     "count": 3,
-    "spread_angle_deg": 24.0,
+    "spread_angle_deg": 55.0,
     "connector_length": 0.2,
     "stroke_width": 1.7,
   })
@@ -123,13 +123,18 @@ def test_dynamic_component_class_selection() -> None:
   assert prototype.class_name == "dc"
   assert prototype.occurrence_count == 3
   assert prototype.sample.parameters["stroke_width"] == 1.7
-  assert prototype.sampling_policy == {}
-  assert prototype.replaced_parameters == ()
+  assert set(prototype.sampling_policy) == {
+    "cross_bar_ratio", "cross_bar_angle_deg",
+  }
+  assert prototype.replaced_parameters == (
+    "cross_bar_ratio", "cross_bar_angle_deg",
+  )
+  assert abs(prototype.sample.parameters["cross_bar_angle_deg"]) >= 8.0
 
   sc_parent = _sample(config, "compound", "together", 403, {
     "stitch": "sc",
     "count": 2,
-    "spread_angle_deg": 20.0,
+    "spread_angle_deg": 45.0,
     "connector_length": 0.0,
     "stroke_width": 1.7,
   })
@@ -138,8 +143,8 @@ def test_dynamic_component_class_selection() -> None:
   )
   sc_prototype = sc_composite.prototypes["stitch"]
   assert sc_prototype.sample.parameters["shape"] == "asymmetric"
-  assert sc_prototype.replaced_parameters == ("shape",)
-  assert set(sc_prototype.sampling_policy) == {"shape"}
+  assert sc_prototype.replaced_parameters == ("shape", "cross_bar_ratio")
+  assert set(sc_prototype.sampling_policy) == {"shape", "cross_bar_ratio"}
   assert "asymmetry" in sc_prototype.sample.parameters
   assert "cross_bar_ratio" in sc_prototype.sample.parameters
 

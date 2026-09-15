@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
-from typing import Literal
+from typing import Iterable, Literal
 
-from ..core.svg import StitchPlacement
+from ..core.models import GenerationConfig
+from ..core.svg import StitchPlacement, rendered_px_to_viewbox
 
 
 Point = tuple[float, float]
+Bounds = tuple[float, float, float, float]
 
 
 @dataclass(frozen=True)
@@ -18,6 +20,15 @@ class SymmetricFanLayout:
 
   axis_angles_deg: tuple[float, ...]
   placements: tuple[StitchPlacement, ...]
+
+
+@dataclass(frozen=True)
+class FanFit:
+  """Uniform scale and translated unit origin for a centered fan."""
+
+  scale_px_per_unit: float
+  origin_px: Point
+  stroke_width_px: float
 
 
 def symmetric_fan_layout(
@@ -74,10 +85,94 @@ def symmetric_fan_layout(
   )
 
 
+def fit_unit_bounds(
+  unit_bounds: Bounds,
+  *,
+  config: GenerationConfig,
+  stroke_width: float,
+  class_name: str,
+) -> FanFit:
+  """Fit unit centerline bounds to the configured stroke-inclusive target."""
+
+  bounds = _bounds(unit_bounds, f"{class_name} unit_bounds")
+  rendered_px_to_viewbox(config, (0.0, 0.0))
+  target = _finite(config.target_visible_px, f"{class_name} target_visible_px")
+  if target <= 0.0:
+    raise ValueError(f"{class_name} target_visible_px must be positive.")
+  stroke = _finite(stroke_width, f"{class_name} stroke_width")
+  if stroke <= 0.0:
+    raise ValueError(f"{class_name} stroke_width must be positive.")
+  viewport_scale = min(config.canvas_width_px, config.canvas_height_px) / 100.0
+  stroke_width_px = stroke * viewport_scale
+  available = target - stroke_width_px
+  if available <= 0.0:
+    raise ValueError(
+      f"{class_name} target_visible_px must exceed its rendered stroke width."
+    )
+  span = max(bounds[2] - bounds[0], bounds[3] - bounds[1])
+  if span <= 0.0:
+    raise ValueError(f"{class_name} unit geometry must have positive visible extent.")
+  scale = available / span
+  bounds_center = (
+    (bounds[0] + bounds[2]) / 2.0,
+    (bounds[1] + bounds[3]) / 2.0,
+  )
+  canvas_center = (
+    config.canvas_width_px / 2.0,
+    config.canvas_height_px / 2.0,
+  )
+  return FanFit(
+    scale_px_per_unit=scale,
+    origin_px=(
+      canvas_center[0] - scale * bounds_center[0],
+      canvas_center[1] - scale * bounds_center[1],
+    ),
+    stroke_width_px=stroke_width_px,
+  )
+
+
+def union_bounds(bounds: Iterable[Bounds], *, class_name: str) -> Bounds:
+  """Return the smallest axis-aligned bounds containing every input bound."""
+
+  items = tuple(_bounds(item, f"{class_name} bounds") for item in bounds)
+  if not items:
+    raise ValueError(f"{class_name} geometry must contain at least one bound.")
+  return (
+    min(item[0] for item in items),
+    min(item[1] for item in items),
+    max(item[2] for item in items),
+    max(item[3] for item in items),
+  )
+
+
+def expand_bounds(bounds: Bounds, amount: float) -> Bounds:
+  """Expand bounds equally in every direction."""
+
+  item = _bounds(bounds, "bounds")
+  expansion = _finite(amount, "bounds expansion")
+  if expansion < 0.0:
+    raise ValueError("bounds expansion must be non-negative.")
+  return (
+    item[0] - expansion,
+    item[1] - expansion,
+    item[2] + expansion,
+    item[3] + expansion,
+  )
+
+
 def _point(value: object, name: str) -> Point:
   if not isinstance(value, tuple) or len(value) != 2:
     raise TypeError(f"{name} must be a two-item tuple.")
   return (_finite(value[0], f"{name}[0]"), _finite(value[1], f"{name}[1]"))
+
+
+def _bounds(value: object, name: str) -> Bounds:
+  if not isinstance(value, tuple) or len(value) != 4:
+    raise TypeError(f"{name} must be a four-item tuple.")
+  result = tuple(_finite(item, f"{name}[{index}]") for index, item in enumerate(value))
+  if result[2] < result[0] or result[3] < result[1]:
+    raise ValueError(f"{name} must use ordered minimum and maximum coordinates.")
+  return result  # type: ignore[return-value]
 
 
 def _finite(value: object, name: str) -> float:

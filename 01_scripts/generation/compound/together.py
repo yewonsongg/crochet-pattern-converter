@@ -21,7 +21,13 @@ from ..core.svg import (
   rendered_px_to_viewbox,
   resolve_stroke_width,
 )
-from .fan import SymmetricFanLayout, symmetric_fan_layout
+from .fan import (
+  SymmetricFanLayout,
+  expand_bounds,
+  fit_unit_bounds,
+  symmetric_fan_layout,
+  union_bounds,
+)
 
 
 CLASS_NAME = "together"
@@ -55,6 +61,7 @@ def generate_together(
     count=count,
     stroke_width=stroke_width,
   )
+  stitch_class = prototype.class_name
   _topology(parent.topology)
 
   prototype_values = prototype.sample.as_dict()
@@ -79,37 +86,15 @@ def generate_together(
     connector_length_px=connector_ratio,
   )
   unit_bounds = _combined_centerline_bounds(unit_geometries, unit_connector)
-
-  viewport_scale = _viewport_scale(config)
-  stroke_width_px = stroke_width * viewport_scale
-  target_visible_px = _positive_finite(
-    config.target_visible_px, "together target_visible_px"
+  fit = fit_unit_bounds(
+    unit_bounds,
+    config=config,
+    stroke_width=stroke_width,
+    class_name="together",
   )
-  available_centerline_px = target_visible_px - stroke_width_px
-  if available_centerline_px <= 0.0:
-    raise ValueError(
-      "together target_visible_px must exceed its rendered stroke width."
-    )
-  unit_span = max(
-    unit_bounds[2] - unit_bounds[0],
-    unit_bounds[3] - unit_bounds[1],
-  )
-  if unit_span <= 0.0:
-    raise ValueError("together unit geometry must have positive visible extent.")
-  stem_length_px = available_centerline_px / unit_span
-
-  unit_center = (
-    (unit_bounds[0] + unit_bounds[2]) / 2.0,
-    (unit_bounds[1] + unit_bounds[3]) / 2.0,
-  )
-  canvas_center = (
-    config.canvas_width_px / 2.0,
-    config.canvas_height_px / 2.0,
-  )
-  join_px = (
-    canvas_center[0] - stem_length_px * unit_center[0],
-    canvas_center[1] - stem_length_px * unit_center[1],
-  )
+  target_visible_px = float(config.target_visible_px)
+  stem_length_px = fit.scale_px_per_unit
+  join_px = fit.origin_px
   final_layout = symmetric_fan_layout(
     count=count,
     spread_angle_deg=spread_angle_deg,
@@ -136,8 +121,8 @@ def generate_together(
     _append_pixel_line(group, config, connector)
 
   centerline_bounds = _combined_centerline_bounds(geometries, connector)
-  stroke_radius_px = stroke_width_px / 2.0
-  rendered_bounds = _expand_bounds(centerline_bounds, stroke_radius_px)
+  stroke_width_px = fit.stroke_width_px
+  rendered_bounds = expand_bounds(centerline_bounds, stroke_width_px / 2.0)
   placements_metadata = [
     {
       "axis_angle_deg": angle,
@@ -344,28 +329,7 @@ def _combined_centerline_bounds(
       max(connector[0][0], connector[1][0]),
       max(connector[0][1], connector[1][1]),
     ))
-  if not bounds:
-    raise ValueError("together geometry must contain at least one line.")
-  return (
-    min(item[0] for item in bounds),
-    min(item[1] for item in bounds),
-    max(item[2] for item in bounds),
-    max(item[3] for item in bounds),
-  )
-
-
-def _expand_bounds(bounds: Bounds, amount: float) -> Bounds:
-  return (
-    bounds[0] - amount,
-    bounds[1] - amount,
-    bounds[2] + amount,
-    bounds[3] + amount,
-  )
-
-
-def _viewport_scale(config: GenerationConfig) -> float:
-  rendered_px_to_viewbox(config, (0.0, 0.0))
-  return min(config.canvas_width_px, config.canvas_height_px) / 100.0
+  return union_bounds(bounds, class_name="together")
 
 
 def _count(value: Any) -> int:
@@ -387,13 +351,6 @@ def _finite(value: Any, name: str) -> float:
   result = float(value)
   if not math.isfinite(result):
     raise ValueError(f"{name} must be a finite number.")
-  return result
-
-
-def _positive_finite(value: Any, name: str) -> float:
-  result = _finite(value, name)
-  if result <= 0.0:
-    raise ValueError(f"{name} must be positive.")
   return result
 
 

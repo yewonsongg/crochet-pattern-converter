@@ -6,6 +6,7 @@ from .primitive.dc import generate_dc
 from .primitive.tr import generate_tr
 from .primitive.dtr import generate_dtr
 from .compound.together import generate_together
+from .compound.increase import generate_increase
 from .instructive.ring import generate_ring
 
 
@@ -18,6 +19,7 @@ GENERATOR_REGISTRY = {
   ("primitive", "tr"): generate_tr,
   ("primitive", "dtr"): generate_dtr,
   ("compound", "together"): generate_together,
+  ("compound", "increase"): generate_increase,
   ("instructive", "ring"): generate_ring,
 }
 
@@ -25,6 +27,7 @@ GENERATOR_REGISTRY = {
 # SamplingConfig.realize_components(), rather than a bare parent sample.
 COMPOSITE_GENERATORS = {
   ("compound", "together"),
+  ("compound", "increase"),
   ("instructive", "ring"),
 }
 

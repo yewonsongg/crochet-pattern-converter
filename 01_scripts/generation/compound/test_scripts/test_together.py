@@ -36,6 +36,7 @@ def _config():
 
 def _composite(stitch: str, count: int = 3) -> tuple[object, CompositeSample]:
   config = _config()
+  spread_angle_deg = {2: 45.0, 3: 55.0, 4: 67.5, 5: 90.0, 6: 90.0}[count]
   parent = config.sample(
     "compound",
     "together",
@@ -44,7 +45,7 @@ def _composite(stitch: str, count: int = 3) -> tuple[object, CompositeSample]:
     overrides={
       "stitch": stitch,
       "count": count,
-      "spread_angle_deg": 24.0,
+      "spread_angle_deg": spread_angle_deg,
       "connector_length": 0.0 if stitch == "sc" else 0.2,
       "stroke_width": 1.8,
     },
@@ -135,8 +136,9 @@ def test_all_stitches_and_counts() -> None:
       assert generated.variant_id is None
       assert generated.sampled_parameters == composite.parent.as_dict()
       assert generated.sampling_provenance is composite.parent.provenance
-      assert metadata["axis_angles_deg"][0] == 12.0
-      assert metadata["axis_angles_deg"][-1] == -12.0
+      half_spread = metadata["spread_angle_deg"] / 2.0
+      assert metadata["axis_angles_deg"][0] == half_spread
+      assert metadata["axis_angles_deg"][-1] == -half_spread
       assert len(metadata["placements"]) == count
       tops = [tuple(item["top_px"]) for item in metadata["placements"]]
       assert all(top == tops[0] for top in tops)

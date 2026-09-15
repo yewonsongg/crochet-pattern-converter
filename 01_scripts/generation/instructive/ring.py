@@ -40,6 +40,8 @@ def generate_ring(
   sample = composite.parent
   values = sample.as_dict()
   variant = values.get("variant")
+  if not isinstance(variant, str):
+    raise ValueError(f"Unsupported ring variant: {variant!r}.")
   stroke_width = resolve_stroke_width(sample, config, class_name=CLASS_NAME)
 
   svg, group = _svg_root(config, stroke_width)
@@ -220,9 +222,9 @@ def _canonical_magic_geometry(
     )
     segments.append((control_1, control_2, point_1))
 
-  endpoint_angles = tuple(
-    round(((math.degrees(angle) + 180.0) % 360.0) - 180.0, 8)
-    for angle in (start_angle, end_angle)
+  endpoint_angles: tuple[float, float] = (
+    round(((math.degrees(start_angle) + 180.0) % 360.0) - 180.0, 8),
+    round(((math.degrees(end_angle) + 180.0) % 360.0) - 180.0, 8),
   )
   return sampled_points[0], tuple(segments), bounds, endpoint_angles
 
