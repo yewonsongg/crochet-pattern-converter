@@ -62,8 +62,13 @@ def append_stitch_geometry(
   placement: StitchPlacement,
   stroke_width: float,
   include_top_bar: bool = True,
+  top_bar_angle_deg: float | None = None,
 ) -> StitchGeometry:
-  """Append one supported stitch between absolute rendered-pixel anchors."""
+  """Append one supported stitch between absolute rendered-pixel anchors.
+
+  ``top_bar_angle_deg`` is an absolute rendered-space angle. When omitted,
+  taller stitches retain their usual top bar perpendicular to the stem.
+  """
 
   if not isinstance(parent, Element):
     raise TypeError("stitch geometry parent must be an XML Element.")
@@ -75,6 +80,8 @@ def append_stitch_geometry(
     raise TypeError("stitch placement must be a StitchPlacement.")
   if not isinstance(include_top_bar, bool):
     raise TypeError("include_top_bar must be a boolean.")
+  if top_bar_angle_deg is not None:
+    top_bar_angle_deg = _finite(top_bar_angle_deg, "top_bar_angle_deg")
   _positive_finite(stroke_width, "stroke_width")
   _placement_vectors(placement)
   _viewport(config)
@@ -89,6 +96,7 @@ def append_stitch_geometry(
     placement=placement,
     stroke_width=float(stroke_width),
     include_top_bar=include_top_bar,
+    top_bar_angle_deg=top_bar_angle_deg,
   )
 
 
@@ -141,6 +149,7 @@ def append_bar_stem_geometry(
   cross_bar_count: int = 0,
   stroke_width: float,
   include_top_bar: bool = True,
+  top_bar_angle_deg: float | None = None,
 ) -> StitchGeometry:
   """Append the shared bar/stem construction used by taller stitches."""
 
@@ -152,6 +161,8 @@ def append_bar_stem_geometry(
     raise ValueError("cross_bar_count must be non-negative.")
   if not isinstance(include_top_bar, bool):
     raise TypeError("include_top_bar must be a boolean.")
+  if top_bar_angle_deg is not None:
+    top_bar_angle_deg = _finite(top_bar_angle_deg, "top_bar_angle_deg")
   cross_bar_angle_deg = _finite(cross_bar_angle_deg, "cross_bar_angle_deg")
   if not -45.0 <= cross_bar_angle_deg <= 45.0:
     raise ValueError("cross_bar_angle_deg must be in the range [-45, 45].")
@@ -178,7 +189,14 @@ def append_bar_stem_geometry(
     cross_bar_length = stem_length * cross_bar_ratio
   lines: list[tuple[Point, Point]] = [(top, base)]
   if include_top_bar:
-    lines.append(_centered_line(top, perpendicular, bar_length))
+    top_bar_direction = perpendicular
+    if top_bar_angle_deg is not None:
+      top_bar_angle_rad = math.radians(top_bar_angle_deg)
+      top_bar_direction = (
+        math.cos(top_bar_angle_rad),
+        math.sin(top_bar_angle_rad),
+      )
+    lines.append(_centered_line(top, top_bar_direction, bar_length))
 
   angle_rad = math.radians(float(cross_bar_angle_deg))
   cross_direction = (
@@ -214,8 +232,9 @@ def _append_sc(
   placement: StitchPlacement,
   stroke_width: float,
   include_top_bar: bool,
+  top_bar_angle_deg: float | None,
 ) -> StitchGeometry:
-  del include_top_bar
+  del include_top_bar, top_bar_angle_deg
   shape = sampled_values.get("shape")
   if shape not in {"symmetric", "asymmetric"}:
     raise ValueError(f"Unsupported sc shape: {shape!r}.")
@@ -257,44 +276,52 @@ def _append_sc(
 def _append_hdc(
   *, parent: Element, sampled_values: Mapping[str, Any], config: GenerationConfig,
   placement: StitchPlacement, stroke_width: float, include_top_bar: bool,
+  top_bar_angle_deg: float | None,
 ) -> StitchGeometry:
   return _append_configured_bar_stem(
     class_name="hdc", cross_bar_count=0, parent=parent,
     sampled_values=sampled_values, config=config, placement=placement,
     stroke_width=stroke_width, include_top_bar=include_top_bar,
+    top_bar_angle_deg=top_bar_angle_deg,
   )
 
 
 def _append_dc(
   *, parent: Element, sampled_values: Mapping[str, Any], config: GenerationConfig,
   placement: StitchPlacement, stroke_width: float, include_top_bar: bool,
+  top_bar_angle_deg: float | None,
 ) -> StitchGeometry:
   return _append_configured_bar_stem(
     class_name="dc", cross_bar_count=1, parent=parent,
     sampled_values=sampled_values, config=config, placement=placement,
     stroke_width=stroke_width, include_top_bar=include_top_bar,
+    top_bar_angle_deg=top_bar_angle_deg,
   )
 
 
 def _append_tr(
   *, parent: Element, sampled_values: Mapping[str, Any], config: GenerationConfig,
   placement: StitchPlacement, stroke_width: float, include_top_bar: bool,
+  top_bar_angle_deg: float | None,
 ) -> StitchGeometry:
   return _append_configured_bar_stem(
     class_name="tr", cross_bar_count=2, parent=parent,
     sampled_values=sampled_values, config=config, placement=placement,
     stroke_width=stroke_width, include_top_bar=include_top_bar,
+    top_bar_angle_deg=top_bar_angle_deg,
   )
 
 
 def _append_dtr(
   *, parent: Element, sampled_values: Mapping[str, Any], config: GenerationConfig,
   placement: StitchPlacement, stroke_width: float, include_top_bar: bool,
+  top_bar_angle_deg: float | None,
 ) -> StitchGeometry:
   return _append_configured_bar_stem(
     class_name="dtr", cross_bar_count=3, parent=parent,
     sampled_values=sampled_values, config=config, placement=placement,
     stroke_width=stroke_width, include_top_bar=include_top_bar,
+    top_bar_angle_deg=top_bar_angle_deg,
   )
 
 
@@ -308,6 +335,7 @@ def _append_configured_bar_stem(
   placement: StitchPlacement,
   stroke_width: float,
   include_top_bar: bool,
+  top_bar_angle_deg: float | None,
 ) -> StitchGeometry:
   return append_bar_stem_geometry(
     parent,
@@ -321,6 +349,7 @@ def _append_configured_bar_stem(
     cross_bar_count=cross_bar_count,
     stroke_width=stroke_width,
     include_top_bar=include_top_bar,
+    top_bar_angle_deg=top_bar_angle_deg,
   )
 
 

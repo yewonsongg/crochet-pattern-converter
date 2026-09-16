@@ -194,6 +194,23 @@ def test_rectangular_and_arbitrary_anchor_geometry() -> None:
       abs_tol=1e-9,
     )
 
+  horizontal_parent = Element("g")
+  horizontal = append_stitch_geometry(
+    horizontal_parent,
+    class_name="hdc",
+    sampled_values={"bar_stem_ratio": 0.4},
+    config=config,
+    placement=placement,
+    stroke_width=2.0,
+    top_bar_angle_deg=0.0,
+  )
+  horizontal_start, horizontal_end = _line_pixels(
+    list(horizontal_parent)[1], config
+  )
+  _assert_point(horizontal_start, (120.0, 40.0))
+  _assert_point(horizontal_end, (140.0, 40.0))
+  assert math.isclose(horizontal.top_bar_length_px, 20.0, abs_tol=1e-9)
+
 
 def test_top_bar_suppression_and_bounds() -> None:
   config = GenerationConfig(canvas_width_px=100, canvas_height_px=100)
@@ -304,6 +321,13 @@ def test_invalid_geometry_inputs() -> None:
           "cross_bar_angle_deg": 60.0,
         },
       },
+    ),
+  )
+  _expect_error(
+    ValueError,
+    "top_bar_angle_deg must be a finite number",
+    lambda: append_stitch_geometry(
+      class_name="hdc", **{**base, "top_bar_angle_deg": math.inf}
     ),
   )
 
