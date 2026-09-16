@@ -1426,14 +1426,23 @@ classes:
             probabilities:
               canonical: 1.0
       
-        aspect_ratio:
+        max_width_ratio:
           kind: continuous
-          distribution: 
+          distribution:
             type: truncated_normal
-            mean: 1.0
-            std:  0.05
-            min:  0.90
-            max:  1.10
+            mean: 0.10
+            std: 0.025
+            min: 0.075
+            max: 0.15
+
+        taper_extent:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.72
+            std: 0.08
+            min: 0.55
+            max: 0.90
         
         stroke_width:
           kind: continuous
