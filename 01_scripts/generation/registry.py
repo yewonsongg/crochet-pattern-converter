@@ -10,6 +10,7 @@ from .compound.increase import generate_increase
 from .compound.crossed import generate_crossed
 from .compound.ch3picot import generate_ch3picot
 from .instructive.ring import generate_ring
+from .instructive.loop import generate_loop
 
 
 GENERATOR_REGISTRY = {
@@ -25,6 +26,7 @@ GENERATOR_REGISTRY = {
   ("compound", "crossed"): generate_crossed,
   ("compound", "ch3picot"): generate_ch3picot,
   ("instructive", "ring"): generate_ring,
+  ("instructive", "loop"): generate_loop,
 }
 
 # These generators consume the explicit CompositeSample produced by
