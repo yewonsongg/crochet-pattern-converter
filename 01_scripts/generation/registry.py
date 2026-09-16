@@ -7,6 +7,7 @@ from .primitive.tr import generate_tr
 from .primitive.dtr import generate_dtr
 from .compound.together import generate_together
 from .compound.increase import generate_increase
+from .compound.post import generate_post
 from .compound.crossed import generate_crossed
 from .compound.ch3picot import generate_ch3picot
 from .instructive.ring import generate_ring
@@ -23,6 +24,7 @@ GENERATOR_REGISTRY = {
   ("primitive", "dtr"): generate_dtr,
   ("compound", "together"): generate_together,
   ("compound", "increase"): generate_increase,
+  ("compound", "post"): generate_post,
   ("compound", "crossed"): generate_crossed,
   ("compound", "ch3picot"): generate_ch3picot,
   ("instructive", "ring"): generate_ring,
@@ -34,6 +36,7 @@ GENERATOR_REGISTRY = {
 COMPOSITE_GENERATORS = {
   ("compound", "together"),
   ("compound", "increase"),
+  ("compound", "post"),
   ("compound", "crossed"),
   ("compound", "ch3picot"),
   ("instructive", "ring"),
