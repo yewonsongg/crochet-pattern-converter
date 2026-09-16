@@ -189,8 +189,7 @@ def test_dynamic_component_class_selection() -> None:
 def test_multiple_roles_and_schema_aware_stroke_inheritance() -> None:
   config = _config()
   parent = _sample(config, "compound", "ch3picot", 500, {
-    "radius": 1.0,
-    "opening_angle_deg": 60.0,
+    "junction_gap_ratio": 0.10,
     "closure_offset": 0.0,
     "stroke_width": 2.0,
   })
