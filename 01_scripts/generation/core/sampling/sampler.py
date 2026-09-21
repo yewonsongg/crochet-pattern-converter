@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Mapping
 
 import numpy as np
 
@@ -28,21 +29,34 @@ class ClassSampler:
     self, 
     rng: np.random.Generator, 
     *, 
-    seed: int | None = None
+    seed: int | None = None,
+    overrides: Mapping[str, Any] | None = None,
+    case_id: str | None = None,
   ) -> SampledParameters:
     """Sample one concrete instance of the configured class.
+
+    Explicit overrides are applied as part of the sampling request and should be incorporated before dependent parameters are sampled or derived. For example, overriding a ring variant to ``chain`` should activate the chain-specific parameters before deriving its diameter.
 
     Args:
       rng: Random-number generator used for stochastic sampling.
       seed: Optional seed recorded in sampling provenance.
+      overrides: Optional mapping of parameter names to forced values. The supplied values are recorded in sampling provenance.
+      case_id: Optional identifier for a coverage, rendering, smoke-test, or regression case.
 
     Returns:
       Sampled parameters, derived values, topology, components and provenance for one class instance.    
+
+    Raises:
+      KeyError: If an override references an unknown parameter or if a required conditional case is unavailable.
+      ValueError: If sampling dependencies cannot be resolved or an override is invalid.
     """
+
+    applied_overrides = dict(overrides or {})
 
     result = sample_class(
       spec = self.spec, 
-      rng = rng
+      rng = rng,
+      overrides = overrides,
     )
 
     provenance = create_sampling_provenance(
@@ -53,6 +67,8 @@ class ClassSampler:
       decisions = result.decisions, 
       parameters = result.parameters, 
       derived = result.derived,
+      overrides = applied_overrides,
+      case_id = case_id,
     )
 
     return SampledParameters(

@@ -5,7 +5,8 @@ from typing import Any, Literal, Mapping
 
 import numpy as np
 
-from ..models import ConfigIdentity, SampledParameters
+from ..models import CompositeSample, ConfigIdentity, SampledParameters
+from .components import realize_component_prototypes
 from .resolver import resolve_class_spec
 from .schema import ClassSpec
 from .sampler import ClassSampler
@@ -190,11 +191,58 @@ class SamplingConfig:
     class_name: str, 
     rng: np.random.Generator, 
     *, 
-    seed: int | None = None
+    seed: int | None = None,
+    overrides: Mapping[str, Any] | None = None,
+    case_id: str | None = None,
   ) -> SampledParameters:
     """Sample one instance using the cached class sampler.
 
-    This is a convenience method equivalent to calling :meth:`sampler` followed by :meth:`ClassSampler.sample`.
+    This is a convenience method equivalent to calling :meth:`sampler` followed by :meth:`ClassSampler.sample`. This method delegates to the cached :class:`ClassSampler` associated with ``class_group`` and ``class_name``.
+
+    Args:
+      class_group: Configuration group containing the class.
+      class_name: Name of the class to sample.
+      rng: Random-number generator used for natural sampling.
+      seed: Optional seed recorded in sampling provenance.
+      overrides: Optional parameter values forced for this sampling request. Overridden values are recorded in provenance and should be applied before dependent parameters are sampled or derived.
+      case_id: Optional identifier for a rendering, coverage, or regression case.
+
+    Returns: 
+      Sampled parameters, derived values, topology, components, and provenance for one class instance.
+
+    Raises:
+      KeyError: If the requested class is not configured.
+      SamplingValidationError: If overrides are invalid for the class.
+      ValueError: If sampling dependencies cannot be resolved.
     """
 
-    return self.sampler(class_group, class_name).sample(rng, seed=seed)
+    return self.sampler(
+      class_group, 
+      class_name
+    ).sample(
+      rng,
+      seed=seed,
+      overrides=overrides,
+      case_id=case_id,
+    )
+
+  def realize_components(
+    self,
+    class_group: str,
+    class_name: str,
+    parent_sample: SampledParameters,
+    rng: np.random.Generator,
+  ) -> CompositeSample:
+    """Sample one reusable child prototype for each active component role.
+
+    This is an explicit phase: :meth:`sample` continues to return only the
+    parent sample. Component occurrence counts are retained as reuse metadata
+    and do not cause repeated child sampling.
+    """
+
+    return realize_component_prototypes(
+      sampling_config=self,
+      owner_spec=self.resolve(class_group, class_name),
+      parent_sample=parent_sample,
+      rng=rng,
+    )

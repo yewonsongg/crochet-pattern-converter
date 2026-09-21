@@ -24,16 +24,25 @@ classes:
             cases:
               oval:
                 type: truncated_normal
-                mean: 1.25
+                mean: 1.65
                 std:  0.08
-                min:  1.05
-                max:  1.50
+                min:  1.30
+                max:  1.85
               circle:
                 type: truncated_normal
                 mean: 1.00
                 std:  0.04
                 min:  0.92
                 max:  1.08
+
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
 
     slst:
       parameters:
@@ -71,7 +80,7 @@ classes:
           distribution: 
             type: categorical
             probabilities:
-              symmetric:   0.75
+              symmetric:  0.75
               asymmetric: 0.25
 
         asymmetry:
@@ -85,10 +94,35 @@ classes:
                 value: 0.0
               asymmetric:
                 type: truncated_normal
-                mean: 0.15
-                std:  0.05
-                min:  0.05
-                max:  0.30
+                mean: 0.0
+                std:  0.10
+                min:  -0.25
+                max:  0.25
+
+        cross_bar_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [shape]
+            cases:
+              symmetric:
+                type: fixed
+                value: 1.0
+              asymmetric:
+                type: truncated_normal
+                mean: 0.80
+                std: 0.10
+                min: 0.50
+                max: 0.95
+
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
 
     hdc:
       parameters:
@@ -118,6 +152,7 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+
         stroke_width:
           kind: continuous
           distribution: 
@@ -155,6 +190,45 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+
+        cross_bar_ratio:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.28
+            std: 0.02
+            min: 0.20
+            max: 0.32
+
+        cross_bar_y:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.50
+            std: 0.08
+            min: 0.42
+            max: 0.62
+
+        cross_bar_angle_deg:
+          kind: continuous
+          distribution:
+            type: mixture
+            components:
+              - weight: 0.50
+                distribution: 
+                  type: truncated_normal
+                  mean: -18.0
+                  std: 7.0
+                  min: -45.0
+                  max: -8.0
+              - weight: 0.50
+                distribution: 
+                  type: truncated_normal
+                  mean: 18.0
+                  std: 7.0
+                  min: 8.0
+                  max: 45.0
+                  
         stroke_width:
           kind: continuous
           distribution: 
@@ -192,6 +266,45 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+
+        cross_bar_ratio:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.28
+            std: 0.02
+            min: 0.20
+            max: 0.32
+
+        cross_bar_y:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.50
+            std: 0.08
+            min: 0.42
+            max: 0.62
+
+        cross_bar_angle_deg:
+          kind: continuous
+          distribution:
+            type: mixture
+            components:
+              - weight: 0.50
+                distribution: 
+                  type: truncated_normal
+                  mean: -18.0
+                  std: 7.0
+                  min: -45.0
+                  max: -8.0
+              - weight: 0.50
+                distribution: 
+                  type: truncated_normal
+                  mean: 18.0
+                  std: 7.0
+                  min: 8.0
+                  max: 45.0
+            
         stroke_width:
           kind: continuous
           distribution: 
@@ -229,6 +342,45 @@ classes:
                   std:  0.02
                   min:  0.21
                   max:  0.29
+
+        cross_bar_ratio:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.28
+            std: 0.02
+            min: 0.20
+            max: 0.32
+
+        cross_bar_y:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.50
+            std: 0.08
+            min: 0.42
+            max: 0.62
+
+        cross_bar_angle_deg:
+          kind: continuous
+          distribution:
+            type: mixture
+            components:
+              - weight: 0.50
+                distribution: 
+                  type: truncated_normal
+                  mean: -18.0
+                  std: 7.0
+                  min: -45.0
+                  max: -8.0
+              - weight: 0.50
+                distribution: 
+                  type: truncated_normal
+                  mean: 18.0
+                  std: 7.0
+                  min: 8.0
+                  max: 45.0
+            
         stroke_width:
           kind: continuous
           distribution: 
@@ -293,12 +445,41 @@ classes:
 
         spread_angle_deg:
           kind: continuous
-          distribution: 
-            type: truncated_normal 
-            mean: 24.0
-            std:  5.0
-            min:  10.0
-            max:  40.0 
+          distribution:
+            type: conditional
+            depends_on: [count]
+            cases:
+              2:
+                type: truncated_normal
+                mean: 45.0
+                std: 8.0
+                min: 30.0
+                max: 55.0
+              3:
+                type: truncated_normal
+                mean: 55.0
+                std: 8.0
+                min: 45.0
+                max: 75.0
+              4:
+                type: truncated_normal
+                mean: 67.5
+                std: 15.0
+                min: 45.0
+                max: 90.0
+              5:
+                type: truncated_normal
+                mean: 90.0
+                std: 15.0
+                min: 67.5
+                max: 120.0
+              6:
+                type: truncated_normal
+                mean: 90.0
+                std: 15.0
+                min: 67.5
+                max: 120.0
+
 
         connector_length:
           kind: continuous
@@ -311,33 +492,152 @@ classes:
                 value: 0.0
               hdc:
                 type: truncated_normal
-                mean: 0.20
+                mean: 0.30
                 std:  0.04
-                min:  0.10
-                max:  0.30
+                min:  0.20
+                max:  0.40
               dc:
                 type: truncated_normal
-                mean: 0.20
+                mean: 0.30
                 std:  0.04
-                min:  0.10
-                max:  0.30
+                min:  0.20
+                max:  0.40
               tr:
                 type: truncated_normal
-                mean: 0.20
+                mean: 0.30
                 std:  0.04
-                min:  0.10
-                max:  0.30
+                min:  0.20
+                max:  0.40
               dtr:
                 type: truncated_normal
-                mean: 0.20
+                mean: 0.30
                 std:  0.04
-                min:  0.10
-                max:  0.30
+                min:  0.20
+                max:  0.40
+
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
 
       components:
         stitch:
           allowed_classes: [sc, hdc, dc, tr, dtr]
           inherit_generator: true
+
+          sampling:
+            by_class:
+              sc:
+                shape:
+                  kind: discrete
+                  distribution:
+                    type: categorical
+                    probabilities:
+                      symmetric:  0.0
+                      asymmetric: 1.0
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: conditional
+                    depends_on: [shape]
+                    cases:
+                      symmetric:
+                        type: fixed
+                        value: 1.0
+                      asymmetric:
+                        type: truncated_normal
+                        mean: 0.60
+                        std: 0.10
+                        min: 0.40
+                        max: 0.80
+              dc:
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
+              tr:
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
+              dtr:
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
     
     increase:
       topology:
@@ -352,17 +652,16 @@ classes:
           distribution: 
             type: categorical
             probabilities:
-              true: 0.40
-              false: 0.60
+              true: 0.30
+              false: 0.70
 
         stitch:
           kind: discrete
           distribution: 
             type: categorical
             probabilities:
-              sc:  0.05
               hdc: 0.15
-              dc:  0.50
+              dc:  0.55
               tr:  0.25
               dtr: 0.05
 
@@ -377,20 +676,212 @@ classes:
               5: 0.07
               6: 0.03
 
+        chain_count:
+          kind: derived
+          formula: "count - 1"
+          depends_on: [count]
+
+        chain_gap_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [chain_presence]
+            cases:
+              true:
+                type: fixed
+                value: 0.50
+              false:
+                type: fixed
+                value: 0.0
+
         spread_angle_deg:
           kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [count]
+            cases:
+              2:
+                type: truncated_normal
+                mean: 45.0
+                std: 8.0
+                min: 30.0
+                max: 55.0
+              3:
+                type: truncated_normal
+                mean: 55.0
+                std: 8.0
+                min: 45.0
+                max: 75.0
+              4:
+                type: truncated_normal
+                mean: 67.5
+                std: 15.0
+                min: 45.0
+                max: 90.0
+              5:
+                type: truncated_normal
+                mean: 90.0
+                std: 15.0
+                min: 67.5
+                max: 120.0
+              6:
+                type: truncated_normal
+                mean: 120.0
+                std: 15.0
+                min: 100.5
+                max: 145.0
+
+        stroke_width:
+          kind: continuous
           distribution: 
-            type: truncated_normal 
-            mean: 24.0
-            std:  5.0
-            min:  10.0
-            max:  40.0
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
 
       components:
         stitch:
-          allowed_classes: [sc, hdc, dc, tr, dtr]
+          allowed_classes: [hdc, dc, tr, dtr]
           inherit_generator: true
-    
+
+          sampling:
+            by_class:
+              hdc:
+                bar_stem_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.28
+                    std: 0.03
+                    min: 0.22
+                    max: 0.34
+              dc:
+                bar_stem_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.24
+                    std: 0.03
+                    min: 0.18
+                    max: 0.30
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
+              tr:
+                bar_stem_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.20
+                    std: 0.025
+                    min: 0.15
+                    max: 0.25
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.13
+                    std: 0.02
+                    min: 0.09
+                    max: 0.16
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
+              dtr:
+                bar_stem_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.13
+                    std: 0.02
+                    min: 0.09
+                    max: 0.16
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
+
+        chains:
+          class: ch
+          when:
+            parameter: chain_presence
+            equals: true
+          count: chain_count
+          arrangement: between_adjacent_tops
+          inherit_generator: true
+          sampling:
+            shape:
+              kind: discrete
+              distribution:
+                type: categorical
+                probabilities:
+                  oval: 1.0
+                  circle: 0.0
+
     post:
       parameters:
         post_type:
@@ -439,12 +930,38 @@ classes:
                 min:  0.12
                 max:  0.40
 
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
+
       components:
         stitch:
           allowed_classes: [sc, hdc, dc, tr, dtr]
           inherit_generator: true
+
+          sampling:
+            by_class:
+              sc:
+                shape:
+                  kind: discrete
+                  distribution:
+                    type: categorical
+                    probabilities:
+                      symmetric:  0.0
+                      asymmetric: 1.0
     
     crossed:
+      topology:
+        top_relation: separate
+        base_relation: separate
+        connector:
+          enabled: false
+
       parameters:
         chain_presence:
           kind: discrete
@@ -464,10 +981,208 @@ classes:
               tr:  0.25
               dtr: 0.10
 
+        crossing_angle_deg:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 60.0
+            std: 6.0
+            min: 45.0
+            max: 75.0
+
+        chain_gap_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [chain_presence]
+            cases:
+              true:
+                type: truncated_normal
+                mean: 0.45
+                std: 0.04
+                min: 0.35
+                max: 0.55
+              false:
+                type: fixed
+                value: 0.0
+
+        stroke_width:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
+
       components: 
         stitch:
           allowed_classes: [hdc, dc, tr, dtr]
+          count: 2
+          arrangement: crossed
           inherit_generator: true
+
+          sampling:
+            by_class:
+              hdc:
+                bar_stem_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.24
+                    std: 0.015
+                    min: 0.019
+                    max: 0.27
+              dc:
+                bar_stem_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.24
+                    std: 0.015
+                    min: 0.019
+                    max: 0.27
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_y:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -10.0
+                          std: 3.5
+                          min: -17.0
+                          max: -3.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 10.0
+                          std: 3.5
+                          min: 3.0
+                          max: 17.0
+              tr:
+                bar_stem_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.24
+                    std: 0.015
+                    min: 0.019
+                    max: 0.27
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_y:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -10.0
+                          std: 3.5
+                          min: -17.0
+                          max: -3.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 10.0
+                          std: 3.5
+                          min: 3.0
+                          max: 17.0
+              dtr:
+                bar_stem_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.24
+                    std: 0.015
+                    min: 0.019
+                    max: 0.27
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_y:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -10.0
+                          std: 3.5
+                          min: -17.0
+                          max: -3.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 10.0
+                          std: 3.5
+                          min: 3.0
+                          max: 17.0
+
+        chains:
+          class: ch
+          when:
+            parameter: chain_presence
+            equals: true
+          count: 1
+          arrangement: between_adjacent_tops
+          inherit_generator: true
+
+          sampling:
+            shape:
+              kind: discrete
+              distribution:
+                type: categorical
+                probabilities:
+                  oval: 1.0
+                  circle: 0.0
     
     rounded:
       topology:
@@ -524,33 +1239,310 @@ classes:
                   4: 0.30
                   5: 0.50
                   6: 0.20
+
+        bundle_width_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [variant]
+            cases:
+              cluster:
+                type: truncated_normal
+                mean: 0.95
+                std: 0.05
+                min: 0.90
+                max: 0.99
+              popcorn:
+                type: truncated_normal
+                mean: 0.95
+                std: 0.05
+                min: 0.90
+                max: 1.10
+
+        stitch_spacing_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [variant]
+            cases:
+              cluster:
+                type: conditional
+                depends_on: [count]
+                cases:
+                  3:
+                    type: truncated_normal
+                    mean: 1.05
+                    std: 0.025
+                    min: 0.98
+                    max: 1.12
+                  4:
+                    type: truncated_normal
+                    mean: 1.10
+                    std: 0.025
+                    min: 1.02
+                    max: 1.18
+                  5:
+                    type: truncated_normal
+                    mean: 1.16
+                    std: 0.025
+                    min: 1.08
+                    max: 1.24
+              popcorn:
+                type: conditional
+                depends_on: [count]
+                cases:
+                  4:
+                    type: truncated_normal
+                    mean: 1.10
+                    std: 0.025
+                    min: 1.02
+                    max: 1.18
+                  5:
+                    type: truncated_normal
+                    mean: 1.16
+                    std: 0.025
+                    min: 1.08
+                    max: 1.24
+                  6:
+                    type: truncated_normal
+                    mean: 1.22
+                    std: 0.025
+                    min: 1.14
+                    max: 1.30
+
+        minimum_stitch_gap_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [variant]
+            cases:
+              cluster:
+                type: conditional
+                depends_on: [count]
+                cases:
+                  3:
+                    type: fixed
+                    value: 0.065
+                  4:
+                    type: fixed
+                    value: 0.075
+                  5:
+                    type: fixed
+                    value: 0.085
+              popcorn:
+                type: conditional
+                depends_on: [count]
+                cases:
+                  4:
+                    type: fixed
+                    value: 0.075
+                  5:
+                    type: fixed
+                    value: 0.080
+                  6:
+                    type: fixed
+                    value: 0.090
+
+        connector_overhang_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [variant]
+            cases:
+              cluster:
+                type: truncated_normal
+                mean: 1.0
+                std: 0.15
+                min: 0.65
+                max: 1.35
+              popcorn:
+                type: fixed
+                value: 0.75
+
+        connector_depth_ratio:
+          kind: continuous
+          distribution:
+            type: conditional
+            depends_on: [variant]
+            cases:
+              cluster:
+                type: fixed
+                value: 0.0
+              popcorn:
+                type: fixed
+                value: 0.85
+
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
     
+      components:
+        stitch:
+          allowed_classes: [hdc, dc, tr, dtr]
+          inherit_generator: true
+          
+          sampling:
+            by_class:
+              # hdc:
+              #   bar_stem_ratio:
+              #     kind: continuous
+              #     distribution:
+              #       type: truncated_normal
+              #       mean: 0.28
+              #       std: 0.03
+              #       min: 0.22
+              #       max: 0.34
+              dc:
+                # bar_stem_ratio:
+                #   kind: continuous
+                #   distribution:
+                #     type: truncated_normal
+                #     mean: 0.24
+                #     std: 0.03
+                #     min: 0.18
+                #     max: 0.30
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.18
+                    std: 0.02
+                    min: 0.14
+                    max: 0.22
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
+              tr:
+                # bar_stem_ratio:
+                #   kind: continuous
+                #   distribution:
+                #     type: truncated_normal
+                #     mean: 0.20
+                #     std: 0.025
+                #     min: 0.15
+                #     max: 0.25
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.13
+                    std: 0.02
+                    min: 0.09
+                    max: 0.16
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
+              dtr:
+                # bar_stem_ratio:
+                #   kind: continuous
+                #   distribution:
+                #     type: truncated_normal
+                #     mean: 0.18
+                #     std: 0.02
+                #     min: 0.14
+                #     max: 0.22
+                cross_bar_ratio:
+                  kind: continuous
+                  distribution:
+                    type: truncated_normal
+                    mean: 0.13
+                    std: 0.02
+                    min: 0.09
+                    max: 0.16
+                cross_bar_angle_deg:
+                  kind: continuous
+                  distribution:
+                    type: mixture
+                    components:
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: -18.0
+                          std: 7.0
+                          min: -45.0
+                          max: -8.0
+                      - weight: 0.50
+                        distribution:
+                          type: truncated_normal
+                          mean: 18.0
+                          std: 7.0
+                          min: 8.0
+                          max: 45.0
+
+
     ch3picot:
       parameters:
-        radius: 
+        junction_gap_ratio:
           kind: continuous
-          distribution: 
+          distribution:
             type: truncated_normal
-            mean: 1.0
-            std:  0.08
-            min:  0.80
-            max:  1.20
-        opening_angle_deg:
-          kind: continuous
-          distribution: 
-            type: truncated_normal
-            mean: 60.0
-            std: 5.0
-            min: 45.0
-            max: 75.0
+            mean: 0.12
+            std: 0.02
+            min: 0.075
+            max: 0.15
+
         closure_offset:
           kind: continuous
+          distribution:
+            type: mixture
+            components:
+              - weight: 0.70
+                distribution:
+                  type: fixed
+                  value: 0.0
+              - weight: 0.30
+                distribution:
+                  type: truncated_normal
+                  mean: 0.0
+                  std: 0.035
+                  min: -0.10
+                  max: 0.10
+
+        stroke_width:
+          kind: continuous
           distribution: 
             type: truncated_normal
-            mean: 0.0
-            std:  0.05
-            min: -0.15
-            max:  0.15
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
 
       components:
         chains:
@@ -558,10 +1550,29 @@ classes:
           count: 3
           inherit_generator: true
           arrangement: triangular
+
+          sampling:
+            shape:
+              kind: discrete
+              distribution:
+                type: categorical
+                probabilities:
+                  oval: 1.0
+                  circle: 0.0
+
         closure:
           class: slst
           count: 1
           inherit_generator: true
+
+          sampling:
+            shape:
+              kind: discrete
+              distribution:
+                type: categorical
+                probabilities:
+                  oval:   0.0
+                  circle: 1.0
 
 
   # Instructive classes
@@ -576,17 +1587,17 @@ classes:
               magic: 0.55 
               chain: 0.45
 
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
+
       variants:
-        magic:
-          parameters:
-            diameter:
-              kind: continuous
-              distribution:
-                type: truncated_normal
-                mean: 0.25
-                std:  0.04
-                min:  0.16
-                max:  0.35
+        magic: {}
         chain:
           parameters:
             count:
@@ -619,7 +1630,16 @@ classes:
               class: ch
               count: count
               arrangement: ring
-              inherit_generator: true    
+              inherit_generator: true
+
+              sampling:
+                shape:
+                  kind: discrete
+                  distribution:
+                    type: categorical
+                    probabilities:
+                      oval: 1.0
+                      circle: 0.0
 
     loop:
       parameters:
@@ -631,6 +1651,7 @@ classes:
             std:  0.05
             min:  0.90
             max:  1.10
+
         curvature:
           kind: continuous
           distribution: 
@@ -639,6 +1660,15 @@ classes:
             std:  0.05
             min:  0.40
             max:  0.60   
+
+        stroke_width:
+          kind: continuous
+          distribution: 
+            type: truncated_normal
+            mean: 1.8
+            std:  0.2
+            min:  1.3
+            max:  2.3
 
     jb:
       parameters:
@@ -649,14 +1679,23 @@ classes:
             probabilities:
               canonical: 1.0
       
-        aspect_ratio:
+        max_width_ratio:
           kind: continuous
-          distribution: 
+          distribution:
             type: truncated_normal
-            mean: 1.0
-            std:  0.05
-            min:  0.90
-            max:  1.10
+            mean: 0.10
+            std: 0.025
+            min: 0.075
+            max: 0.15
+
+        taper_extent:
+          kind: continuous
+          distribution:
+            type: truncated_normal
+            mean: 0.72
+            std: 0.08
+            min: 0.55
+            max: 0.90
         
         stroke_width:
           kind: continuous

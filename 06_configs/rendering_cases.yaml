@@ -1,0 +1,13 @@
+cases:
+  - id: sc_asymmetric_demo
+    class:
+      family: primitive
+      name: sc
+    seed: 1234
+    sampling:
+      shape: asymmetric
+      asymmetry: 0.18
+    generation:
+      canvas_width_px: 150
+      canvas_height_px: 150
+      stroke_width_normalized: 4.0

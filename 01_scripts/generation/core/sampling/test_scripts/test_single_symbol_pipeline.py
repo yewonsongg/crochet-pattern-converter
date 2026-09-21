@@ -10,9 +10,10 @@ import numpy as np
 
 
 SCRIPT_ROOT = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_ROOT.parent
-if str(SCRIPT_ROOT) not in sys.path:
-  sys.path.insert(0, str(SCRIPT_ROOT))
+PROJECT_ROOT = SCRIPT_ROOT.parents[4]
+SCRIPTS_ROOT = PROJECT_ROOT / "01_scripts"
+if str(SCRIPTS_ROOT) not in sys.path:
+  sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from generation.core.sampling import load_sampling_config
 

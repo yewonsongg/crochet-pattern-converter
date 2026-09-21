@@ -119,10 +119,10 @@ def sample_distribution(
       raise ValueError("Conditional distributions require exactly one dependency.")
 
     dependency = dependencies[0]
-    selected = values[dependency]
-
     if dependency not in values:
       raise KeyError(f"{path} depends on unavailable value: {dependency!r}.")
+
+    selected = values[dependency]
 
     cases = spec["cases"]
 

@@ -1,1 +1,27 @@
-# write SVG/JSON/TXT, output paths/stems
+"""Persistence helpers for generated artifacts."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from .models import GeneratedObject
+from labeling import write_yolo_label
+from rasterization import render_png
+
+
+def write_generated_artifacts(generated: GeneratedObject, stem: Path) -> None:
+  """Write generated artifacts, including a label when one is available."""
+  stem.parent.mkdir(parents=True, exist_ok=True)
+  svg_path = stem.with_suffix(".svg")
+  png_path = stem.with_suffix(".png")
+  metadata_path = stem.with_suffix(".json")
+  label_path = stem.with_suffix(".txt")
+  svg_path.write_text(generated.svg, encoding="utf-8")
+  render_png(generated.svg, png_path)
+  metadata_path.write_text(json.dumps(generated.metadata, indent=2, default=str), encoding="utf-8")
+  if generated.yolo_label is not None:
+    write_yolo_label(generated, label_path)
+  generated.svg_path = svg_path
+  generated.png_path = png_path
+  generated.metadata_path = metadata_path
