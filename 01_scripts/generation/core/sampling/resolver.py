@@ -245,7 +245,10 @@ def sample_class(
     # print("CONTEXT", context)
 
     for name, parameter in list(pending.items()):
-      dependencies = parameter.distribution.get("depends_on", [])
+      dependencies = _pending_distribution_dependencies(
+        parameter.distribution,
+        context,
+      )
 
       # print("CHECK:", name, "dependencies=", dependencies, "available=", context.keys())
 
@@ -542,9 +545,40 @@ def _override_distribution(
     if not isinstance(nested, Mapping):
       raise ValueError(f"Conditional case for {dependency}={selected!r} has an invalid distribution.")
 
-    return nested
+    concrete = nested
 
-  return concrete
+  return _override_distribution(concrete, context)
+
+
+def _pending_distribution_dependencies(
+  distribution: Mapping[str, Any],
+  context: Mapping[str, Any],
+) -> set[str]:
+  """Return dependencies needed to resolve the currently reachable branch."""
+
+  dependencies = distribution.get("depends_on", [])
+  result = {
+    dependency
+    for dependency in dependencies
+    if isinstance(dependency, str)
+  }
+  if distribution.get("type") != "conditional" or len(result) != 1:
+    return result
+
+  dependency = next(iter(result))
+  if dependency not in context:
+    return result
+
+  cases = distribution.get("cases")
+  if not isinstance(cases, Mapping):
+    return result
+  branch = cases.get(context[dependency])
+  if not isinstance(branch, Mapping):
+    return result
+  if "type" not in branch and isinstance(branch.get("distribution"), Mapping):
+    branch = branch["distribution"]
+
+  return result | _pending_distribution_dependencies(branch, context)
 
 
 def _supports_override(

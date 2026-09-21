@@ -9,6 +9,7 @@ from .compound.together import generate_together
 from .compound.increase import generate_increase
 from .compound.post import generate_post
 from .compound.crossed import generate_crossed
+from .compound.rounded import generate_rounded
 from .compound.ch3picot import generate_ch3picot
 from .instructive.ring import generate_ring
 from .instructive.loop import generate_loop
@@ -27,6 +28,7 @@ GENERATOR_REGISTRY = {
   ("compound", "increase"): generate_increase,
   ("compound", "post"): generate_post,
   ("compound", "crossed"): generate_crossed,
+  ("compound", "rounded"): generate_rounded,
   ("compound", "ch3picot"): generate_ch3picot,
   ("instructive", "ring"): generate_ring,
   ("instructive", "loop"): generate_loop,
@@ -40,6 +42,7 @@ COMPOSITE_GENERATORS = {
   ("compound", "increase"),
   ("compound", "post"),
   ("compound", "crossed"),
+  ("compound", "rounded"),
   ("compound", "ch3picot"),
   ("instructive", "ring"),
 }
