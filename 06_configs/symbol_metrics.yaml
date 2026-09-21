@@ -1,0 +1,23 @@
+# Relative visible size of each class at a shared chart scale.
+# Set one reference class to 1.0, then edit the other ratios from real charts.
+schema_version: 1
+classes:
+  primitive:
+    ch: {relative_size: 0.5}
+    slst: {relative_size: 0.4}
+    sc: {relative_size: 0.85}
+    hdc: {relative_size: 1.0}
+    dc: {relative_size: 1.0}
+    tr: {relative_size: 1.0}
+    dtr: {relative_size: 1.0}
+  compound:
+    together: {relative_size: 1.0}
+    increase: {relative_size: 1.0}
+    post: {relative_size: 1.0}
+    crossed: {relative_size: 1.0}
+    rounded: {relative_size: 1.0}
+    ch3picot: {relative_size: 0.8}
+  instructive:
+    ring: {relative_size: 1.5}
+    loop: {relative_size: 0.5}
+    jb: {relative_size: 0.8}

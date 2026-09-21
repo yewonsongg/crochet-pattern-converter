@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from .models import GeneratedObject, GenerationConfig
+from .metrics import SymbolMetrics, load_symbol_metrics
 from .sampling import SamplingConfig
 
 
@@ -95,36 +96,46 @@ def load_rendering_cases(path: str | Path, sampling_config: SamplingConfig) -> d
 def generate_rendering_case(
   case: RenderingCase,
   sampling_config: SamplingConfig,
-  generator_registry: Mapping[str, Any],
+  generator_registry: Mapping[tuple[str, str], Any],
   *,
+  symbol_metrics: SymbolMetrics | None = None,
   output_dir: str | Path | None = None,
 ) -> GeneratedObject:
-  """Sample, generate, and optionally persist one rendering case."""
+  """Sample, size, generate, and optionally persist one rendering case."""
   import numpy as np
+  from generation.registry import COMPOSITE_GENERATORS
 
+  class_key = (case.class_group, case.class_name)
+  rng = np.random.default_rng(case.seed)
   sample = sampling_config.sample(
     case.class_group,
     case.class_name,
-    np.random.default_rng(case.seed),
+    rng,
     seed=case.seed,
     overrides=case.sampling,
     case_id=case.case_id,
   )
-  generator = generator_registry.get(case.class_name)
+  generator = generator_registry.get(class_key)
   if generator is None:
     raise KeyError(f"No generator registered for {case.class_group}.{case.class_name}.")
-  config = GenerationConfig().with_overrides(case.generation)
-  generated = generator(
-    config=config,
-    sampled_parameters=sample.as_dict(),
-    class_id=sampling_config.resolve(case.class_group, case.class_name).class_id,
+  if symbol_metrics is None:
+    metrics_path = Path(sampling_config.identity.ontology_path).with_name("symbol_metrics.yaml")
+    symbol_metrics = load_symbol_metrics(metrics_path, sampling_config.class_keys)
+  base_config = GenerationConfig().with_overrides(case.generation)
+  config = symbol_metrics.config_for(class_key, base_config)
+  generator_input = (
+    sampling_config.realize_components(*class_key, sample, rng)
+    if class_key in COMPOSITE_GENERATORS else sample
   )
+  generated = generator(sampling_config.resolve(*class_key), generator_input, config)
   generated.sampling_provenance = sample.provenance
   generated.metadata["rendering_case"] = {
     "id": case.case_id,
     "seed": case.seed,
     "sampling_overrides": dict(case.sampling or {}),
     "generation_overrides": dict(case.generation or {}),
+    "relative_size": symbol_metrics.relative_sizes[class_key],
+    "effective_target_visible_px": config.target_visible_px,
   }
   if output_dir is not None:
     from .artifacts import write_generated_artifacts
