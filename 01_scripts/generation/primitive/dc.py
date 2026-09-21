@@ -37,7 +37,6 @@ def generate_dc(spec: ClassSpec, sample: SampledParameters, config: GenerationCo
     "stroke_width": stroke_width,
     "canvas": {"width_px": config.canvas_width_px, "height_px": config.canvas_height_px},
     "target_visible_px": config.target_visible_px,
-    "visual_rotation_deg": config.rotation_deg,
   }
   return GeneratedObject(
     class_id=spec.class_id, class_name=spec.class_name, variant_id=None,

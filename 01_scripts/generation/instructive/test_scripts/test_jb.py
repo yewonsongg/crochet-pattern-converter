@@ -120,7 +120,7 @@ def test_width_and_taper_semantics() -> None:
   assert full_control[1] == shallow_control[1]
 
 
-def test_rotation_registry_and_determinism() -> None:
+def test_upright_registry_and_determinism() -> None:
   config, sample = _sample(max_width_ratio=0.18, taper_extent=0.80)
   spec = config.resolve("instructive", "jb")
   assert GENERATOR_REGISTRY[("instructive", "jb")] is generate_jb
@@ -130,15 +130,10 @@ def test_rotation_registry_and_determinism() -> None:
     canvas_height_px=80,
     target_visible_px=60.0,
   )
-  unrotated = generate_jb(spec, sample, generation)
+  generated = generate_jb(spec, sample, generation)
   repeated = generate_jb(spec, sample, generation)
-  rotated = generate_jb(spec, sample, replace(generation, rotation_deg=19.0))
-  assert repeated.svg == unrotated.svg
-  assert repeated.metadata == unrotated.metadata
-  assert "rotate(19.0 50 50)" in rotated.svg
-  assert rotated.metadata["top_tip_px"] == unrotated.metadata["top_tip_px"]
-  assert rotated.metadata["path_segments"] == unrotated.metadata["path_segments"]
-  assert rotated.metadata["rendered_bounds_px"] == unrotated.metadata["rendered_bounds_px"]
+  assert repeated.svg == generated.svg
+  assert repeated.metadata == generated.metadata
 
 
 def test_invalid_inputs() -> None:
@@ -200,7 +195,7 @@ def test_invalid_inputs() -> None:
 def main() -> None:
   test_filled_tapered_geometry_and_fitting()
   test_width_and_taper_semantics()
-  test_rotation_registry_and_determinism()
+  test_upright_registry_and_determinism()
   test_invalid_inputs()
   print("Join-below generation checks passed.")
 

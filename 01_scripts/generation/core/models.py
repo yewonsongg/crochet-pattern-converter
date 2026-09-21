@@ -140,20 +140,18 @@ class CompositeSample:
 class GenerationConfig:
   """Rendering configuration for one generated symbol.
 
-  This configuration controls the isolated rendering context used by a class generator. It describes canvas dimensions, target visible-symbol size, visual rotation, and normalized SVG stroke width.
+  This configuration controls the isolated rendering context used by a class generator. It describes canvas dimensions, target visible-symbol size, and normalized SVG stroke width.
 
   Attributes:
     canvas_width_px: Output canvas width in pixels.
     canvas_height_px: Output canvas height in pixels.
     target_visible_px: Target visible-symbol size in pixels.
-    rotation_deg: Visual rotation applied to the symbol.
     stroke_width_normalized: Stroke width in normalized SVG coordinates.
   """
 
   canvas_width_px: int = 25
   canvas_height_px: int = 25
   target_visible_px: float = 15.0
-  rotation_deg: float = 0.0
   stroke_width_normalized: float = 4.0
 
   def with_overrides(
@@ -205,7 +203,7 @@ class GenerationConfig:
     ):
       raise ValueError("canvas_height_px must be a positive integer.")
 
-    for name in ("target_visible_px", "rotation_deg", "stroke_width_normalized"):
+    for name in ("target_visible_px", "stroke_width_normalized"):
       value = getattr(result, name)
 
       if isinstance(value, bool) or not isinstance(value, (int, float)):

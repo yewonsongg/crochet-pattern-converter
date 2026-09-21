@@ -17,7 +17,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
   sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from generation.core.models import GenerationConfig
-from generation.core.rendering import render_png
+from rasterization import render_png
 from generation.core.sampling import load_sampling_config
 from generation.instructive.ring import generate_ring
 
@@ -49,7 +49,6 @@ def test_magic_ring() -> None:
       canvas_width_px=40,
       canvas_height_px=30,
       target_visible_px=20.0,
-      rotation_deg=12.0,
     ),
   )
   root = fromstring(generated.svg)
@@ -60,7 +59,6 @@ def test_magic_ring() -> None:
   assert path.attrib["d"].count("C") == 38
   assert "Z" not in path.attrib["d"].upper()
   assert path.attrib["stroke-linecap"] == "round"
-  assert "rotate(12.0 50 50)" in generated.svg
   assert generated.variant_id == "magic"
   assert generated.metadata["phenotype"] == "canonical_spiral"
   assert generated.metadata["turns"] == 1.9
@@ -97,12 +95,10 @@ def test_chain_ring_reuses_one_prototype() -> None:
       canvas_width_px=30,
       canvas_height_px=30,
       target_visible_px=15.0,
-      rotation_deg=-18.0,
     ),
   )
   fromstring(generated.svg)
   assert generated.svg.count("<ellipse") == 6
-  assert "rotate(-18.0 50 50)" in generated.svg
   assert generated.variant_id == "chain"
   assert generated.metadata["count"] == 6
   assert generated.metadata["chain_pitch"] == 3.2

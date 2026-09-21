@@ -50,7 +50,6 @@ def generate_sc(
       "height_px": config.canvas_height_px,
     },
     "target_visible_px": config.target_visible_px,
-    "visual_rotation_deg": config.rotation_deg,
     "stroke_width": stroke_width,
   }
   return GeneratedObject(

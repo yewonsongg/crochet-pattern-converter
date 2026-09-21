@@ -18,7 +18,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
   sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from generation.core.models import GenerationConfig
-from generation.core.rendering import render_png
+from rasterization import render_png
 from generation.core.svg import ChainPlacement, append_chain_geometry
 
 

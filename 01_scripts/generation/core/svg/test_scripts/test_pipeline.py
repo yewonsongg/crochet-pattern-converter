@@ -36,7 +36,15 @@ def main() -> None:
     generated = generator(spec, generator_input, GenerationConfig())
     assert isinstance(generated, GeneratedObject)
     assert generated.svg
-    fromstring(generated.svg)
+    root = fromstring(generated.svg)
+    assert all("transform" not in child.attrib for child in root)
+
+  try:
+    GenerationConfig().with_overrides({"rotation_deg": 20.0})
+  except KeyError:
+    pass
+  else:
+    raise AssertionError("GenerationConfig must reject scene rotation")
 
   spec = config.resolve("primitive", "slst")
   generator = GENERATOR_REGISTRY[("primitive", "slst")]
@@ -45,11 +53,10 @@ def main() -> None:
     {"shape": "circle", "aspect_ratio": 1.04},
   )):
     sample = config.sample("primitive", "slst", np.random.default_rng(2000 + index), seed=2000 + index, overrides=overrides)
-    generated = generator(spec, sample, GenerationConfig(rotation_deg=20.0))
+    generated = generator(spec, sample, GenerationConfig())
     assert generated.metadata["shape"] == overrides["shape"]
     assert generated.metadata["aspect_ratio"] == overrides["aspect_ratio"]
     assert "<ellipse" in generated.svg
-    assert "rotate(20.0 50 50)" in generated.svg
     assert generated.obb_pixels is None
     assert generated.yolo_label is None
     fromstring(generated.svg)

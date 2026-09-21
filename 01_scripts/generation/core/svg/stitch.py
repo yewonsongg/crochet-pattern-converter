@@ -369,7 +369,6 @@ def _svg_root(config: GenerationConfig, stroke_width: float) -> tuple[Element, E
     "stroke-width": str(stroke_width),
     "stroke-linecap": "round",
     "stroke-linejoin": "round",
-    "transform": f"rotate({config.rotation_deg} 50 50)",
   })
   return svg, group
 

@@ -20,7 +20,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
   sys.path.insert(0, str(SCRIPTS_ROOT))
 
 from generation.core.models import GenerationConfig
-from generation.core.rendering import render_png
+from rasterization import render_png
 from generation.core.sampling import load_sampling_config
 from generation.instructive.loop import generate_loop
 from generation.registry import COMPOSITE_GENERATORS, GENERATOR_REGISTRY
@@ -128,7 +128,7 @@ def test_aspect_ratio_and_curvature_semantics() -> None:
   assert shallow["control_points_px"] != rounded["control_points_px"]
 
 
-def test_rotation_rasterization_and_registry() -> None:
+def test_upright_rasterization_and_registry() -> None:
   config, sample = _sample(aspect_ratio=1.05, curvature=0.55)
   spec = config.resolve("instructive", "loop")
   assert GENERATOR_REGISTRY[("instructive", "loop")] is generate_loop
@@ -138,20 +138,15 @@ def test_rotation_rasterization_and_registry() -> None:
     canvas_height_px=100,
     target_visible_px=60.0,
   )
-  unrotated = generate_loop(spec, sample, generation)
-  rotated = generate_loop(spec, sample, replace(generation, rotation_deg=19.0))
-  assert "rotate(19.0 50 50)" in rotated.svg
-  assert rotated.metadata["endpoints_px"] == unrotated.metadata["endpoints_px"]
-  assert rotated.metadata["apex_px"] == unrotated.metadata["apex_px"]
-  assert rotated.metadata["rendered_bounds_px"] == unrotated.metadata["rendered_bounds_px"]
+  generated = generate_loop(spec, sample, generation)
 
   with TemporaryDirectory() as directory:
     output = Path(directory) / "loop.png"
-    render_png(unrotated.svg, output)
+    render_png(generated.svg, output)
     with Image.open(output) as image:
       raster_bounds = image.getbbox()
       assert raster_bounds is not None
-      declared = unrotated.metadata["rendered_bounds_px"]
+      declared = generated.metadata["rendered_bounds_px"]
       assert raster_bounds[0] >= math.floor(declared[0]) - 1
       assert raster_bounds[1] >= math.floor(declared[1]) - 1
       assert raster_bounds[2] <= math.ceil(declared[2]) + 1
@@ -202,7 +197,7 @@ def test_invalid_inputs() -> None:
 def main() -> None:
   test_upper_arc_geometry_and_fitting()
   test_aspect_ratio_and_curvature_semantics()
-  test_rotation_rasterization_and_registry()
+  test_upright_rasterization_and_registry()
   test_invalid_inputs()
   print("Loop generation checks passed.")
 

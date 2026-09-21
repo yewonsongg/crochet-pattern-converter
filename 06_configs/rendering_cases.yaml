@@ -10,5 +10,4 @@ cases:
     generation:
       canvas_width_px: 150
       canvas_height_px: 150
-      rotation_deg: 20
       stroke_width_normalized: 4.0

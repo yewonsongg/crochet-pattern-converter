@@ -22,7 +22,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
 from generation.compound.fan import symmetric_fan_layout
 from generation.compound.together import generate_together
 from generation.core.models import CompositeSample, GenerationConfig
-from generation.core.rendering import render_png
+from rasterization import render_png
 from generation.core.sampling import load_sampling_config
 from generation.registry import COMPOSITE_GENERATORS, GENERATOR_REGISTRY
 
@@ -191,7 +191,7 @@ def test_all_stitches_and_counts() -> None:
         )
 
 
-def test_rotation_rasterization_and_registry() -> None:
+def test_upright_rasterization_and_registry() -> None:
   assert GENERATOR_REGISTRY[("compound", "together")] is generate_together
   assert ("compound", "together") in COMPOSITE_GENERATORS
   spec, composite = _composite("dc", 3)
@@ -199,31 +199,16 @@ def test_rotation_rasterization_and_registry() -> None:
     canvas_width_px=100,
     canvas_height_px=100,
     target_visible_px=60.0,
-    rotation_deg=19.0,
   )
   generated = generate_together(spec, composite, config)
-  unrotated = generate_together(
-    spec,
-    composite,
-    replace(config, rotation_deg=0.0),
-  )
-  assert "rotate(19.0 50 50)" in generated.svg
-  assert generated.metadata["visual_rotation_deg"] == 19.0
-  assert generated.metadata["placements"] == unrotated.metadata["placements"]
-  assert generated.metadata["centerline_bounds_px"] == (
-    unrotated.metadata["centerline_bounds_px"]
-  )
-  assert generated.metadata["rendered_bounds_px"] == (
-    unrotated.metadata["rendered_bounds_px"]
-  )
 
   with TemporaryDirectory() as directory:
     output = Path(directory) / "together.png"
-    render_png(unrotated.svg, output)
+    render_png(generated.svg, output)
     with Image.open(output) as image:
       raster_bounds = image.getbbox()
       assert raster_bounds is not None
-      declared = unrotated.metadata["rendered_bounds_px"]
+      declared = generated.metadata["rendered_bounds_px"]
       assert raster_bounds[0] >= math.floor(declared[0]) - 1
       assert raster_bounds[1] >= math.floor(declared[1]) - 1
       assert raster_bounds[2] <= math.ceil(declared[2]) + 1

@@ -33,7 +33,6 @@ def _build_slst_svg(config: GenerationConfig, aspect_ratio: float, stroke_width:
     "fill": "black",
     "stroke": "black",
     "stroke-width": str(stroke_width),
-    "transform": f"rotate({config.rotation_deg} 50 50)",
   })
   SubElement(group, "ellipse", {
     "fill": "black",
@@ -68,7 +67,6 @@ def generate_slst(
     "aspect_ratio": float(aspect_ratio),
     "canvas": {"width_px": config.canvas_width_px, "height_px": config.canvas_height_px},
     "target_visible_px": config.target_visible_px,
-    "visual_rotation_deg": config.rotation_deg,
     "stroke_width": stroke_width,
   }
   return GeneratedObject(

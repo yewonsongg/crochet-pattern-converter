@@ -198,7 +198,6 @@ def generate_crossed(
       "height_px": config.canvas_height_px,
     },
     "target_visible_px": float(config.target_visible_px),
-    "visual_rotation_deg": config.rotation_deg,
   }
   return GeneratedObject(
     class_id=spec.class_id,
@@ -454,7 +453,6 @@ def _svg_root(
     "stroke-width": str(stroke_width),
     "stroke-linecap": "round",
     "stroke-linejoin": "round",
-    "transform": f"rotate({config.rotation_deg} 50 50)",
   })
   return svg, group
 

@@ -45,7 +45,6 @@ def build_bar_stem_svg(
     "stroke-width": str(stroke),
     "stroke-linecap": "round",
     "stroke-linejoin": "round",
-    "transform": f"rotate({config.rotation_deg} 50 50)",
   })
   center_x = config.canvas_width_px / 2.0
   center_y = config.canvas_height_px / 2.0

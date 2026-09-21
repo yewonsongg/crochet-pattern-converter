@@ -28,7 +28,6 @@ def generate_hdc(spec: ClassSpec, sample: SampledParameters, config: GenerationC
     "bar_length_px": geometry.top_bar_length_px,
     "canvas": {"width_px": config.canvas_width_px, "height_px": config.canvas_height_px},
     "target_visible_px": config.target_visible_px,
-    "visual_rotation_deg": config.rotation_deg,
     "stroke_width": stroke_width,
   }
   return GeneratedObject(

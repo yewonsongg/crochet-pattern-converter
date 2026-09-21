@@ -23,7 +23,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
 
 from generation.compound.increase import generate_increase
 from generation.core.models import CompositeSample, GenerationConfig
-from generation.core.rendering import render_png
+from rasterization import render_png
 from generation.core.sampling import load_sampling_config
 from generation.core.sampling.validator import (
   SamplingValidationError,
@@ -270,7 +270,7 @@ def test_distribution_policies() -> None:
     assert seen_signs == {-1, 1}
 
 
-def test_rotation_rasterization_and_registry() -> None:
+def test_upright_rasterization_and_registry() -> None:
   config, _, composite = _parent_and_composite("dc", 3, True)
   spec = config.resolve("compound", "increase")
   assert GENERATOR_REGISTRY[("compound", "increase")] is generate_increase
@@ -279,22 +279,16 @@ def test_rotation_rasterization_and_registry() -> None:
     canvas_width_px=100,
     canvas_height_px=100,
     target_visible_px=60.0,
-    rotation_deg=17.0,
   )
-  rotated = generate_increase(spec, composite, generation)
-  unrotated = generate_increase(spec, composite, replace(generation, rotation_deg=0.0))
-  assert "rotate(17.0 50 50)" in rotated.svg
-  assert rotated.metadata["placements"] == unrotated.metadata["placements"]
-  assert rotated.metadata["chain_placements"] == unrotated.metadata["chain_placements"]
-  assert rotated.metadata["rendered_bounds_px"] == unrotated.metadata["rendered_bounds_px"]
+  generated = generate_increase(spec, composite, generation)
 
   with TemporaryDirectory() as directory:
     output = Path(directory) / "increase.png"
-    render_png(unrotated.svg, output)
+    render_png(generated.svg, output)
     with Image.open(output) as image:
       raster_bounds = image.getbbox()
       assert raster_bounds is not None
-      declared = unrotated.metadata["rendered_bounds_px"]
+      declared = generated.metadata["rendered_bounds_px"]
       assert raster_bounds[0] >= math.floor(declared[0]) - 1
       assert raster_bounds[1] >= math.floor(declared[1]) - 1
       assert raster_bounds[2] <= math.ceil(declared[2]) + 1
@@ -449,7 +443,7 @@ def main() -> None:
   test_activation_and_seed_stability()
   test_all_stitches_counts_and_chain_states()
   test_distribution_policies()
-  test_rotation_rasterization_and_registry()
+  test_upright_rasterization_and_registry()
   test_activation_validation()
   test_invalid_generation_inputs()
   print("Increase compound generation checks passed.")

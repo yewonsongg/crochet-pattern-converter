@@ -21,7 +21,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
 
 from generation.compound.post import generate_post
 from generation.core.models import GenerationConfig
-from generation.core.rendering import render_png
+from rasterization import render_png
 from generation.core.sampling import load_sampling_config
 from generation.registry import COMPOSITE_GENERATORS, GENERATOR_REGISTRY
 
@@ -231,7 +231,7 @@ def test_hook_and_j_shape_contracts() -> None:
     )
 
 
-def test_rotation_rasterization_and_registry() -> None:
+def test_upright_rasterization_and_registry() -> None:
   config, _, composite = _parent_and_composite("tr", "back", "j_shape")
   spec = config.resolve("compound", "post")
   assert GENERATOR_REGISTRY[("compound", "post")] is generate_post
@@ -241,20 +241,15 @@ def test_rotation_rasterization_and_registry() -> None:
     canvas_height_px=100,
     target_visible_px=60.0,
   )
-  unrotated = generate_post(spec, composite, generation)
-  rotated = generate_post(spec, composite, replace(generation, rotation_deg=21.0))
-  assert "rotate(21.0 50 50)" in rotated.svg
-  assert rotated.metadata["stitch_placement"] == unrotated.metadata["stitch_placement"]
-  assert rotated.metadata["path_segments"] == unrotated.metadata["path_segments"]
-  assert rotated.metadata["rendered_bounds_px"] == unrotated.metadata["rendered_bounds_px"]
+  generated = generate_post(spec, composite, generation)
 
   with TemporaryDirectory() as directory:
     output = Path(directory) / "post.png"
-    render_png(unrotated.svg, output)
+    render_png(generated.svg, output)
     with Image.open(output) as image:
       raster_bounds = image.getbbox()
       assert raster_bounds is not None
-      declared = unrotated.metadata["rendered_bounds_px"]
+      declared = generated.metadata["rendered_bounds_px"]
       assert raster_bounds[0] >= math.floor(declared[0]) - 1
       assert raster_bounds[1] >= math.floor(declared[1]) - 1
       assert raster_bounds[2] <= math.ceil(declared[2]) + 1
@@ -320,7 +315,7 @@ def main() -> None:
   test_all_stitches_post_types_and_variants()
   test_front_and_back_are_mirrors()
   test_hook_and_j_shape_contracts()
-  test_rotation_rasterization_and_registry()
+  test_upright_rasterization_and_registry()
   test_invalid_inputs()
   print("Post generation checks passed.")
 

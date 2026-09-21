@@ -21,7 +21,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
 
 from generation.compound.ch3picot import generate_ch3picot
 from generation.core.models import CompositeSample, GenerationConfig
-from generation.core.rendering import render_png
+from rasterization import render_png
 from generation.core.sampling import load_sampling_config
 from generation.registry import COMPOSITE_GENERATORS, GENERATOR_REGISTRY
 
@@ -171,10 +171,6 @@ def test_offset_frame_rotation_and_rasterization() -> None:
       target_visible_px=60.0,
     )
     generated = generate_ch3picot(spec, composite, base)
-    rotated = generate_ch3picot(spec, composite, replace(base, rotation_deg=23.0))
-    assert generated.metadata["chain_placements"] == rotated.metadata["chain_placements"]
-    assert generated.metadata["closure_placement"] == rotated.metadata["closure_placement"]
-    assert generated.metadata["rendered_bounds_px"] == rotated.metadata["rendered_bounds_px"]
 
     metadata = generated.metadata
     lower_left = metadata["chain_placements"][1]

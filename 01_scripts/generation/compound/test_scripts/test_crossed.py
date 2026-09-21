@@ -21,7 +21,7 @@ if str(SCRIPTS_ROOT) not in sys.path:
 
 from generation.compound.crossed import generate_crossed
 from generation.core.models import GenerationConfig
-from generation.core.rendering import render_png
+from rasterization import render_png
 from generation.core.sampling import load_sampling_config
 from generation.registry import COMPOSITE_GENERATORS, GENERATOR_REGISTRY
 
@@ -236,7 +236,7 @@ def test_sampling_distributions_and_policy() -> None:
     assert 0.09 <= prototype.sample.parameters["bar_stem_ratio"] <= 0.14
 
 
-def test_rotation_rasterization_and_registry() -> None:
+def test_upright_rasterization_and_registry() -> None:
   config, _, composite = _parent_and_composite("dc", True)
   spec = config.resolve("compound", "crossed")
   assert GENERATOR_REGISTRY[("compound", "crossed")] is generate_crossed
@@ -246,22 +246,15 @@ def test_rotation_rasterization_and_registry() -> None:
     canvas_height_px=100,
     target_visible_px=60.0,
   )
-  unrotated = generate_crossed(spec, composite, generation)
-  rotated = generate_crossed(
-    spec, composite, replace(generation, rotation_deg=17.0)
-  )
-  assert "rotate(17.0 50 50)" in rotated.svg
-  assert rotated.metadata["placements"] == unrotated.metadata["placements"]
-  assert rotated.metadata["chain_placements"] == unrotated.metadata["chain_placements"]
-  assert rotated.metadata["rendered_bounds_px"] == unrotated.metadata["rendered_bounds_px"]
+  generated = generate_crossed(spec, composite, generation)
 
   with TemporaryDirectory() as directory:
     output = Path(directory) / "crossed.png"
-    render_png(unrotated.svg, output)
+    render_png(generated.svg, output)
     with Image.open(output) as image:
       raster_bounds = image.getbbox()
       assert raster_bounds is not None
-      declared = unrotated.metadata["rendered_bounds_px"]
+      declared = generated.metadata["rendered_bounds_px"]
       assert raster_bounds[0] >= math.floor(declared[0]) - 1
       assert raster_bounds[1] >= math.floor(declared[1]) - 1
       assert raster_bounds[2] <= math.ceil(declared[2]) + 1
@@ -372,6 +365,6 @@ if __name__ == "__main__":
   test_activation_and_seed_stability()
   test_all_stitches_and_chain_states()
   test_sampling_distributions_and_policy()
-  test_rotation_rasterization_and_registry()
+  test_upright_rasterization_and_registry()
   test_invalid_generation_inputs()
   print("crossed generator tests passed")

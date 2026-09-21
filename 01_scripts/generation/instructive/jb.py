@@ -113,7 +113,6 @@ def generate_jb(
       "height_px": config.canvas_height_px,
     },
     "target_visible_px": target_visible_px,
-    "visual_rotation_deg": config.rotation_deg,
   }
   return GeneratedObject(
     class_id=spec.class_id,
@@ -162,7 +161,6 @@ def _svg_root(config: GenerationConfig) -> tuple[Element, Element]:
   group = SubElement(svg, "g", {
     "fill": "black",
     "stroke": "none",
-    "transform": f"rotate({config.rotation_deg} 50 50)",
   })
   return svg, group
 

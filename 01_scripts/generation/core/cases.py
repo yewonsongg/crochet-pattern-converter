@@ -35,7 +35,7 @@ def load_rendering_cases(path: str | Path, sampling_config: SamplingConfig) -> d
     raise ValueError("Rendering-case manifest requires a 'cases' list.")
 
   cases: dict[str, RenderingCase] = {}
-  valid_generation = {"canvas_width_px", "canvas_height_px", "target_visible_px", "rotation_deg", "stroke_width_normalized"}
+  valid_generation = {"canvas_width_px", "canvas_height_px", "target_visible_px", "stroke_width_normalized"}
   for index, raw in enumerate(raw_cases):
     prefix = f"cases[{index}]"
     if not isinstance(raw, Mapping):
