@@ -80,6 +80,16 @@ cases:
     pattern: radial
     pattern_overrides: {ring_count: 4, outer_count: 16, radius_px: 400.0, phase_deg: 0.0}
 
+  - id: radial_interstitial
+    profile: exposure
+    seed: 1206
+    pattern: radial
+    pattern_overrides: {ring_count: 3, outer_count: 15, radius_px: 390.0, phase_deg: 0.0, instruction_count: 4}
+    forced_role_classes:
+      interstitial:
+        - instructive.loop
+        - instructive.jb
+
   - id: small_symbol_stress
     profile: exposure
     seed: 1301

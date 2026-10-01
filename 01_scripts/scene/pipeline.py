@@ -248,12 +248,13 @@ def _radial_slots(sample: PatternSample) -> SlotGraph:
       ))
       ordinal += 1
     rings.append(ring_ids)
-  edges = []
+  cycle_edges = []
+  radial_edges = []
   for ring_offset, ring_ids in enumerate(rings):
     ring_index = ring_offset + 1
     for index, source in enumerate(ring_ids):
       target = ring_ids[(index + 1) % len(ring_ids)]
-      edges.append(GraphEdge(
+      cycle_edges.append(GraphEdge(
         f"cycle_{ring_index:02d}_{index:03d}", source, target, "cycle_next",
       ))
       if ring_offset == 0:
@@ -264,9 +265,59 @@ def _radial_slots(sample: PatternSample) -> SlotGraph:
         parent_index = int(math.floor(index * len(inner_ids) / len(ring_ids) + 0.5))
         parent = inner_ids[parent_index % len(inner_ids)]
         relationship = "adjacent_ring"
-      edges.append(GraphEdge(
+      radial_edges.append(GraphEdge(
         f"radial_{ring_index:02d}_{index:03d}", parent, source, relationship,
       ))
+  instruction_count = min(int(sample.parameters["instruction_count"]), len(cycle_edges))
+  rng = np.random.default_rng(derive_seed(sample.scene_seed, "radial", "interstitial_edges"))
+  selected_indices = set(
+    int(value) for value in rng.choice(len(cycle_edges), size=instruction_count, replace=False)
+  )
+  node_by_id = {node.slot_id: node for node in nodes}
+  edges = []
+  instruction_index = 0
+  for edge_index, edge in enumerate(cycle_edges):
+    if edge_index not in selected_indices:
+      edges.append(edge)
+      continue
+    source_node = node_by_id[edge.source_id]
+    target_node = node_by_id[edge.target_id]
+    count = int(source_node.context["count"])
+    ring_index = int(source_node.context["ring_index"])
+    radius_fraction = float(source_node.context["radius_fraction"])
+    angle = float(source_node.context["angle_deg"]) + 180.0 / count
+    radians = math.radians(angle)
+    midpoint = (
+      math.sin(radians) * radius_fraction,
+      -math.cos(radians) * radius_fraction,
+    )
+    delta_x = target_node.structural_position[0] - source_node.structural_position[0]
+    delta_y = target_node.structural_position[1] - source_node.structural_position[1]
+    edge_angle = math.degrees(math.atan2(delta_y, delta_x))
+    slot_id = f"ring_interstitial_{instruction_index:02d}"
+    nodes.append(SlotNode(
+      slot_id=slot_id,
+      role="interstitial",
+      ordinal=ordinal + instruction_index,
+      structural_position=midpoint,
+      context={
+        "between_source": edge.source_id,
+        "between_target": edge.target_id,
+        "replaced_edge_id": edge.edge_id,
+        "replaced_relationship": edge.relationship,
+        "edge_angle_deg": edge_angle,
+        "angle_deg": angle,
+        "ring_index": ring_index,
+        "ring_count": ring_count,
+        "radius_fraction": radius_fraction,
+      },
+    ))
+    edges.extend((
+      GraphEdge(f"{edge.edge_id}_before", edge.source_id, slot_id, "interstitial_neighbor"),
+      GraphEdge(f"{edge.edge_id}_after", slot_id, edge.target_id, "interstitial_neighbor"),
+    ))
+    instruction_index += 1
+  edges.extend(radial_edges)
   return SlotGraph(sample, tuple(nodes), tuple(edges))
 
 

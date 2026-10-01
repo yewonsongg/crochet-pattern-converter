@@ -163,14 +163,42 @@ def main() -> None:
     max(1, math.floor(outer_count * ring_index / ring_count + 0.5))
     for ring_index in range(1, ring_count + 1)
   )
-  assert len(radial.slot_graph.nodes) == ring_node_count + 1
-  assert len(radial.slot_graph.edges) == ring_node_count * 2
-  for node in radial.slot_graph.nodes[1:]:
+  radial_instruction_count = int(radial.pattern_sample.parameters["instruction_count"])
+  assert len(radial.slot_graph.nodes) == ring_node_count + 1 + radial_instruction_count
+  assert len(radial.slot_graph.edges) == ring_node_count * 2 + radial_instruction_count
+  for node in radial.slot_graph.nodes:
+    if node.role not in {"ring_a", "ring_b"}:
+      continue
     expected_role = "ring_a" if node.context["ring_index"] % 2 == 1 else "ring_b"
     assert node.role == expected_role
-  assert {node.role for node in radial.slot_graph.nodes if node.context.get("ring_index") == 1} == {
+  assert {
+    node.role for node in radial.slot_graph.nodes
+    if node.context.get("ring_index") == 1 and node.role in {"ring_a", "ring_b"}
+  } == {
     "ring_a"
   }
+
+  radial_interstitial = _generate(cases["radial_interstitial"], sampling, scene)
+  _assert_common_contract(radial_interstitial)
+  inserted = [
+    node for node in radial_interstitial.slot_graph.nodes if node.role == "interstitial"
+  ]
+  assert len(inserted) == 4
+  edge_ids = {edge.edge_id for edge in radial_interstitial.slot_graph.edges}
+  expected_classes = cases["radial_interstitial"].forced_role_classes["interstitial"]
+  for index, node in enumerate(inserted):
+    assert node.context["replaced_relationship"] == "cycle_next"
+    assert node.context["replaced_edge_id"] not in edge_ids
+    assert math.isclose(
+      math.hypot(*node.structural_position),
+      node.context["radius_fraction"],
+      abs_tol=1e-12,
+    )
+    assigned = next(
+      item for item in radial_interstitial.assigned_graph.nodes
+      if item.slot.slot_id == node.slot_id
+    )
+    assert assigned.class_key == expected_classes[index % len(expected_classes)]
 
   overlap = _generate(cases["overlap_stress"], sampling, scene)
   _assert_common_contract(overlap)
@@ -182,6 +210,7 @@ def main() -> None:
     "grid_all_classes",
     "grid_interstitial",
     "radial_center_ring",
+    "radial_interstitial",
     "overlap_stress",
   }
   for case_id, case in cases.items():

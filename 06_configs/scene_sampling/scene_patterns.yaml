@@ -106,6 +106,7 @@ patterns:
       outer_count: {distribution: integer_uniform, min: 8, max: 16}
       radius_px: {distribution: uniform, min: 270.0, max: 430.0}
       phase_deg: {distribution: uniform, min: 0.0, max: 360.0}
+      instruction_count: {distribution: integer_uniform, min: 1, max: 4}
     roles:
       center:
         count: {kind: fixed, value: 1}
@@ -132,6 +133,15 @@ patterns:
           positive_direction: clockwise
           offset_deg: 0.0
           jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
+      interstitial:
+        count: {kind: parameter, name: instruction_count}
+        class_pool: instruction_stitches
+        layout: {kind: sampled_ring_arc_midpoints}
+        orientation:
+          kind: edge_aligned
+          offset_deg: 0.0
+          jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
     edges:
       - {kind: cycle_next, roles: [ring_a, ring_b]}
       - {kind: adjacent_ring, inner_roles: [center, ring_a, ring_b], outer_roles: [ring_a, ring_b]}
+      - {kind: subdivide_sampled_cycle_edges, inserted_role: interstitial}
