@@ -21,12 +21,14 @@ cases:
     profile: exposure
     seed: 1104
     pattern: grid
-    pattern_overrides: {rows: 4, columns: 4, pitch_x_px: 125.0, pitch_y_px: 125.0}
+    pattern_overrides: {rows: 6, columns: 6, pitch_x_px: 125.0, pitch_y_px: 125.0}
     forced_role_classes:
-      cells:
+      outer_cells:
         - primitive.ch
         - primitive.slst
         - primitive.sc
+        - instructive.loop
+      inner_cells:
         - primitive.hdc
         - primitive.dc
         - primitive.tr
@@ -36,7 +38,16 @@ cases:
         - compound.post
         - compound.crossed
         - compound.rounded
-        - compound.ch3picot
+
+  - id: grid_interstitial
+    profile: exposure
+    seed: 1105
+    pattern: grid
+    pattern_overrides: {rows: 6, columns: 6, pitch_x_px: 125.0, pitch_y_px: 125.0, instruction_count: 4}
+    forced_role_classes:
+      interstitial:
+        - instructive.loop
+        - instructive.jb
 
   - id: radial_default
     profile: exposure
@@ -47,31 +58,27 @@ cases:
     profile: exposure
     seed: 1202
     pattern: radial
-    pattern_overrides: {outer_count: 16, radius_px: 270.0, phase_deg: 0.0}
+    pattern_overrides: {ring_count: 4, outer_count: 16, radius_px: 270.0, phase_deg: 0.0}
 
   - id: radial_center_ring
     profile: exposure
     seed: 1203
     pattern: radial
-    pattern_overrides: {outer_count: 12, radius_px: 340.0, phase_deg: 0.0}
+    pattern_overrides: {ring_count: 3, outer_count: 12, radius_px: 340.0, phase_deg: 0.0}
     forced_role_classes:
       center: [instructive.ring]
 
-  - id: radial_center_loop
+  - id: radial_two_rings
     profile: exposure
     seed: 1204
     pattern: radial
-    pattern_overrides: {outer_count: 12, radius_px: 340.0, phase_deg: 0.0}
-    forced_role_classes:
-      center: [instructive.loop]
+    pattern_overrides: {ring_count: 2, outer_count: 12, radius_px: 340.0, phase_deg: 0.0}
 
-  - id: radial_center_jb
+  - id: radial_four_rings
     profile: exposure
     seed: 1205
     pattern: radial
-    pattern_overrides: {outer_count: 12, radius_px: 340.0, phase_deg: 0.0}
-    forced_role_classes:
-      center: [instructive.jb]
+    pattern_overrides: {ring_count: 4, outer_count: 16, radius_px: 400.0, phase_deg: 0.0}
 
   - id: small_symbol_stress
     profile: exposure
@@ -85,4 +92,4 @@ cases:
     seed: 1302
     pattern: radial
     chart_scale: 1.1
-    pattern_overrides: {outer_count: 16, radius_px: 190.0, phase_deg: 0.0}
+    pattern_overrides: {ring_count: 2, outer_count: 16, radius_px: 190.0, phase_deg: 0.0}

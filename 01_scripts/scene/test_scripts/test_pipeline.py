@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from hashlib import sha256
 from io import BytesIO
+import math
 from pathlib import Path
 import sys
 from xml.etree.ElementTree import fromstring
@@ -33,6 +35,7 @@ def _load(profile: str):
     patterns_path=SCENE_CONFIG_ROOT / "scene_patterns.yaml",
     profile_path=SCENE_CONFIG_ROOT / f"{profile}.yaml",
     metrics_path=CONFIG_ROOT / "symbol_metrics.yaml",
+    rasterization_path=CONFIG_ROOT / "rasterization.yaml",
     sampling_config=sampling,
   )
   return sampling, scene
@@ -60,6 +63,7 @@ def _assert_common_contract(trace) -> None:
   assert len(trace.rendered_scene.yolo_labels) == count
   assert len(trace.rendered_scene.labeled_node_ids) == count
   assert trace.pattern_sample.canvas_size_px == (1280, 1280)
+  assert trace.pattern_sample.config_identity.rasterization_digest
   assert Image.open(BytesIO(trace.rendered_scene.png_bytes)).size == (1280, 1280)
   fromstring(trace.rendered_scene.scene_svg)
   for node, placement, label in zip(
@@ -68,6 +72,7 @@ def _assert_common_contract(trace) -> None:
     trace.rendered_scene.yolo_labels,
   ):
     assert len(node.local_obb) == 4
+    assert Image.open(BytesIO(node.png_bytes)).size == node.generated.canvas_size_px
     assert len(placement.scene_obb) == 4
     assert 0.0 <= placement.visibility_fraction <= 1.0
     fields = label.split()
@@ -81,8 +86,33 @@ def main() -> None:
 
   sparse = _generate(cases["grid_sparse"], sampling, scene)
   _assert_common_contract(sparse)
-  assert len(sparse.slot_graph.nodes) == 16
-  assert len(sparse.slot_graph.edges) == 24
+  assert scene.rasterization["scene_supersample_factor"] == 2
+  assert scene.rasterization["local_label_supersample_factor"] == 4
+  instruction_count = int(sparse.pattern_sample.parameters["instruction_count"])
+  assert len(sparse.slot_graph.nodes) == 16 + instruction_count
+  assert len(sparse.slot_graph.edges) == 24 + instruction_count
+  assert sum(node.role == "outer_cells" for node in sparse.slot_graph.nodes) == 12
+  assert sum(node.role == "inner_cells" for node in sparse.slot_graph.nodes) == 4
+  assert sum(node.role == "interstitial" for node in sparse.slot_graph.nodes) == instruction_count
+  logical_values = [
+    value
+    for node in sparse.realized_graph.nodes
+    for point in node.local_obb
+    for value in point
+  ]
+  assert all(abs(value * 4 - round(value * 4)) < 1e-9 for value in logical_values)
+  assert any(abs(value - round(value)) > 1e-9 for value in logical_values)
+
+  native_render_config = replace(
+    scene,
+    rasterization={**scene.rasterization, "scene_supersample_factor": 1},
+  )
+  native_render = _generate(cases["grid_sparse"], sampling, native_render_config)
+  assert native_render.rendered_scene.yolo_labels == sparse.rendered_scene.yolo_labels
+  assert Image.open(BytesIO(native_render.rendered_scene.png_bytes)).size == (1280, 1280)
+  assert sha256(native_render.rendered_scene.png_bytes).digest() != sha256(
+    sparse.rendered_scene.png_bytes
+  ).digest()
 
   repeated = _generate(cases["grid_sparse"], sampling, scene)
   assert [node.class_key for node in sparse.assigned_graph.nodes] == [
@@ -98,22 +128,62 @@ def main() -> None:
 
   all_classes = _generate(cases["grid_all_classes"], sampling, scene)
   _assert_common_contract(all_classes)
-  expected = cases["grid_all_classes"].forced_role_classes["cells"]
-  actual = tuple(node.class_key for node in all_classes.assigned_graph.nodes)
-  assert actual == tuple(expected[index % len(expected)] for index in range(len(actual)))
+  for role, expected in cases["grid_all_classes"].forced_role_classes.items():
+    actual = tuple(
+      node.class_key for node in all_classes.assigned_graph.nodes if node.slot.role == role
+    )
+    assert actual == tuple(expected[index % len(expected)] for index in range(len(actual)))
+
+  interstitial = _generate(cases["grid_interstitial"], sampling, scene)
+  _assert_common_contract(interstitial)
+  inserted = [node for node in interstitial.slot_graph.nodes if node.role == "interstitial"]
+  assert len(inserted) == 4
+  assert len({node.context["replaced_edge_id"] for node in inserted}) == 4
+  positions = {node.slot_id: node.structural_position for node in interstitial.slot_graph.nodes}
+  edge_ids = {edge.edge_id for edge in interstitial.slot_graph.edges}
+  for index, node in enumerate(inserted):
+    source = positions[node.context["between_source"]]
+    target = positions[node.context["between_target"]]
+    assert node.structural_position == (
+      (source[0] + target[0]) / 2.0,
+      (source[1] + target[1]) / 2.0,
+    )
+    assert node.context["replaced_edge_id"] not in edge_ids
+    assert node.context["edge_angle_deg"] in (0.0, 90.0)
+    expected_classes = cases["grid_interstitial"].forced_role_classes["interstitial"]
+    assigned = next(item for item in interstitial.assigned_graph.nodes if item.slot.slot_id == node.slot_id)
+    assert assigned.class_key == expected_classes[index % len(expected_classes)]
 
   radial = _generate(cases["radial_center_ring"], sampling, scene)
   _assert_common_contract(radial)
   assert radial.assigned_graph.nodes[0].class_key == ("instructive", "ring")
-  assert len(radial.slot_graph.nodes) == 13
-  assert len(radial.slot_graph.edges) == 24
+  ring_count = int(radial.pattern_sample.parameters["ring_count"])
+  outer_count = int(radial.pattern_sample.parameters["outer_count"])
+  ring_node_count = sum(
+    max(1, math.floor(outer_count * ring_index / ring_count + 0.5))
+    for ring_index in range(1, ring_count + 1)
+  )
+  assert len(radial.slot_graph.nodes) == ring_node_count + 1
+  assert len(radial.slot_graph.edges) == ring_node_count * 2
+  for node in radial.slot_graph.nodes[1:]:
+    expected_role = "ring_a" if node.context["ring_index"] % 2 == 1 else "ring_b"
+    assert node.role == expected_role
+  assert {node.role for node in radial.slot_graph.nodes if node.context.get("ring_index") == 1} == {
+    "ring_a"
+  }
 
   overlap = _generate(cases["overlap_stress"], sampling, scene)
   _assert_common_contract(overlap)
   assert any(interaction.intersects for interaction in overlap.placed_graph.interactions)
   assert any(interaction.overlap_area_px2 > 0 for interaction in overlap.placed_graph.interactions)
 
-  checked = {"grid_sparse", "grid_all_classes", "radial_center_ring", "overlap_stress"}
+  checked = {
+    "grid_sparse",
+    "grid_all_classes",
+    "grid_interstitial",
+    "radial_center_ring",
+    "overlap_stress",
+  }
   for case_id, case in cases.items():
     if case_id not in checked:
       _assert_common_contract(_generate(case, sampling, scene))

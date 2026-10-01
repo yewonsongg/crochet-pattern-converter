@@ -21,6 +21,7 @@ from .models import ClassKey, SceneConfigIdentity
 class SceneConfiguration:
   patterns: Mapping[str, Any]
   profile: Mapping[str, Any]
+  rasterization: Mapping[str, Any]
   symbol_metrics: SymbolMetrics
   identity: SceneConfigIdentity
 
@@ -63,15 +64,19 @@ def load_scene_configuration(
   patterns_path: str | Path,
   profile_path: str | Path,
   metrics_path: str | Path,
+  rasterization_path: str | Path,
   sampling_config: SamplingConfig,
 ) -> SceneConfiguration:
   patterns_source = Path(patterns_path)
   profile_source = Path(profile_path)
   metrics_source = Path(metrics_path)
+  rasterization_source = Path(rasterization_path)
   patterns = _load_yaml(patterns_source)
   profile = _load_yaml(profile_source)
+  rasterization = _load_yaml(rasterization_source)
   _validate_patterns(patterns, set(sampling_config.class_keys))
   _validate_profile(profile, patterns)
+  _validate_rasterization(rasterization)
   metrics = load_symbol_metrics(metrics_source, sampling_config.class_keys)
   identity = SceneConfigIdentity(
     patterns_path=str(patterns_source.resolve()),
@@ -80,8 +85,27 @@ def load_scene_configuration(
     profile_digest=_digest(profile),
     metrics_path=str(metrics_source.resolve()),
     metrics_digest=_digest(_load_yaml(metrics_source)),
+    rasterization_path=str(rasterization_source.resolve()),
+    rasterization_digest=_digest(rasterization),
   )
-  return SceneConfiguration(patterns, profile, metrics, identity)
+  return SceneConfiguration(patterns, profile, rasterization, metrics, identity)
+
+
+def _validate_rasterization(document: Mapping[str, Any]) -> None:
+  expected = {
+    "schema_version",
+    "scene_supersample_factor",
+    "local_label_supersample_factor",
+  }
+  if set(document) != expected or document.get("schema_version") != 1:
+    raise ValueError(
+      "Rasterization config requires schema_version: 1 and exactly the two "
+      "supersample factors."
+    )
+  for name in ("scene_supersample_factor", "local_label_supersample_factor"):
+    value = document[name]
+    if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= 4:
+      raise ValueError(f"{name} must be an integer from 1 through 4.")
 
 
 def _validate_patterns(document: Mapping[str, Any], ontology: set[ClassKey]) -> None:

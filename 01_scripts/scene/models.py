@@ -20,6 +20,8 @@ class SceneConfigIdentity:
   profile_digest: str
   metrics_path: str
   metrics_digest: str
+  rasterization_path: str
+  rasterization_digest: str
 
 
 @dataclass(frozen=True)

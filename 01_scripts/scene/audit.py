@@ -18,7 +18,14 @@ def draw_slot_graph(graph: SlotGraph, *, size: int = 720) -> Image.Image:
   draw = ImageDraw.Draw(image)
   for edge in graph.edges:
     draw.line((positions[edge.source_id], positions[edge.target_id]), fill="#c8c8c8", width=2)
-  role_colors = {"cells": "#4477aa", "center": "#cc6677", "outer": "#228833"}
+  role_colors = {
+    "inner_cells": "#4477aa",
+    "outer_cells": "#66ccee",
+    "interstitial": "#aa4499",
+    "center": "#cc6677",
+    "ring_a": "#228833",
+    "ring_b": "#ee7733",
+  }
   for node in graph.nodes:
     x, y = positions[node.slot_id]
     draw.ellipse((x - 7, y - 7, x + 7, y + 7), fill=role_colors.get(node.role, "#666666"))

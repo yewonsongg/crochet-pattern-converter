@@ -23,9 +23,24 @@ symbol_generation:
 
 # Pools define eligibility only; profile files will supply selection weights.
 class_pools:
-  stitches:
+  grid_outer:
     - primitive.ch
     - primitive.slst
+    - primitive.sc
+    - instructive.loop
+  grid_inner:
+    - primitive.hdc
+    - primitive.dc
+    - primitive.tr
+    - primitive.dtr
+    - compound.together
+    - compound.increase
+    - compound.post
+    - compound.crossed
+    - compound.rounded
+  radial_center:
+    - instructive.ring
+  radial_stitch_a:
     - primitive.sc
     - primitive.hdc
     - primitive.dc
@@ -36,34 +51,58 @@ class_pools:
     - compound.post
     - compound.crossed
     - compound.rounded
+  radial_stitch_b:
+    - primitive.ch
+    - primitive.slst
     - compound.ch3picot
-  radial_center:
-    - instructive.ring
+    - instructive.loop
+  instruction_stitches:
     - instructive.loop
     - instructive.jb
 
 patterns:
   grid:
     parameters:
-      rows: {distribution: integer_uniform, min: 4, max: 8}
-      columns: {distribution: integer_uniform, min: 4, max: 8}
+      rows: {distribution: integer_uniform, min: 6, max: 10}
+      columns: {distribution: integer_uniform, min: 6, max: 10}
       pitch_x_px: {distribution: uniform, min: 110.0, max: 135.0}
       pitch_y_px: {distribution: uniform, min: 110.0, max: 135.0}
+      instruction_count: {distribution: integer_uniform, min: 1, max: 4}
     roles:
-      cells:
-        count: {kind: grid_product, rows: rows, columns: columns}
-        class_pool: stitches
-        layout: {kind: centered_grid}
+      inner_cells:
+        count: {kind: grid_interior, rows: rows, columns: columns}
+        class_pool: grid_inner
+        layout: {kind: centered_grid_interior}
         orientation:
           kind: fixed
           angle_deg: 0.0
           jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
+      outer_cells:
+        count: {kind: grid_perimeter, rows: rows, columns: columns}
+        class_pool: grid_outer
+        layout: {kind: centered_grid_perimeter}
+        orientation:
+          kind: fixed
+          angle_deg: 0.0
+          jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
+      interstitial:
+        count: {kind: parameter, name: instruction_count}
+        class_pool: instruction_stitches
+        layout: {kind: sampled_edge_midpoints}
+        orientation:
+          kind: edge_aligned
+          offset_deg: 0.0
+          jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
     edges:
-      - {kind: horizontal_neighbor, role: cells}
-      - {kind: vertical_neighbor, role: cells}
+      - {kind: horizontal_neighbor, roles: [inner_cells, outer_cells]}
+      - {kind: vertical_neighbor, roles: [inner_cells, outer_cells]}
+      - {kind: subdivide_sampled_edges, inserted_role: interstitial}
 
   radial:
     parameters:
+      ring_count: {distribution: integer_uniform, min: 2, max: 4}
+      # Number of nodes on the outermost ring. Inner-ring counts grow in
+      # proportion to radius and are deterministically rounded.
       outer_count: {distribution: integer_uniform, min: 8, max: 16}
       radius_px: {distribution: uniform, min: 270.0, max: 430.0}
       phase_deg: {distribution: uniform, min: 0.0, max: 360.0}
@@ -73,10 +112,20 @@ patterns:
         class_pool: radial_center
         layout: {kind: center}
         orientation: {kind: fixed, angle_deg: 0.0}
-      outer:
-        count: {kind: parameter, name: outer_count}
-        class_pool: stitches
-        layout: {kind: circular_ring, radius: radius_px, phase: phase_deg}
+      ring_a:
+        count: {kind: alternating_radial_rings, parity: odd}
+        class_pool: radial_stitch_a
+        layout: {kind: concentric_rings, radius: radius_px, phase: phase_deg}
+        orientation:
+          kind: radial_outward
+          zero_direction: top
+          positive_direction: clockwise
+          offset_deg: 0.0
+          jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
+      ring_b:
+        count: {kind: alternating_radial_rings, parity: even}
+        class_pool: radial_stitch_b
+        layout: {kind: concentric_rings, radius: radius_px, phase: phase_deg}
         orientation:
           kind: radial_outward
           zero_direction: top
@@ -84,5 +133,5 @@ patterns:
           offset_deg: 0.0
           jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
     edges:
-      - {kind: cycle_next, role: outer}
-      - {kind: center_to_outer, center_role: center, outer_role: outer}
+      - {kind: cycle_next, roles: [ring_a, ring_b]}
+      - {kind: adjacent_ring, inner_roles: [center, ring_a, ring_b], outer_roles: [ring_a, ring_b]}

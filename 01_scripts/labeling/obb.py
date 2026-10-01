@@ -76,19 +76,28 @@ def label_upright_alpha(
   alpha: np.ndarray,
   *,
   alpha_threshold: int = 0,
+  raster_scale: int = 1,
 ) -> GeneratedObject:
-  """Fill an upright generated object's OBB fields from its alpha mask."""
+  """Measure an alpha mask and store its OBB in logical SVG coordinates."""
   if alpha.ndim != 2:
     raise ValueError("Alpha mask must be a two-dimensional array.")
+  if isinstance(raster_scale, bool) or not isinstance(raster_scale, int) or raster_scale <= 0:
+    raise ValueError("raster_scale must be a positive integer.")
   height_px, width_px = alpha.shape
-  if (width_px, height_px) != generated.canvas_size_px:
-    raise ValueError("Alpha mask dimensions must match the generated canvas.")
+  logical_width, logical_height = generated.canvas_size_px
+  if (width_px, height_px) != (
+    logical_width * raster_scale,
+    logical_height * raster_scale,
+  ):
+    raise ValueError("Alpha mask dimensions must match the scaled generated canvas.")
 
-  obb_pixels = upright_obb_from_alpha(alpha, alpha_threshold=alpha_threshold)
+  obb_pixels = upright_obb_from_alpha(
+    alpha, alpha_threshold=alpha_threshold,
+  ) / raster_scale
   generated.obb_pixels = obb_pixels
-  generated.obb_normalized = normalize_obb(obb_pixels, width_px, height_px)
+  generated.obb_normalized = normalize_obb(obb_pixels, logical_width, logical_height)
   generated.yolo_label = format_yolo_obb_label(
-    generated.class_id, obb_pixels, width_px, height_px,
+    generated.class_id, obb_pixels, logical_width, logical_height,
   )
   return generated
 
@@ -98,13 +107,19 @@ def label_upright_png(
   png_bytes: bytes,
   *,
   alpha_threshold: int = 0,
+  raster_scale: int = 1,
 ) -> GeneratedObject:
   """Label a transparent PNG previously rasterized from the upright SVG."""
   with Image.open(BytesIO(png_bytes)) as image:
     if image.format != "PNG" or "A" not in image.getbands():
       raise ValueError("Labeling requires a PNG with an alpha channel.")
     alpha = np.asarray(image.getchannel("A"))
-  return label_upright_alpha(generated, alpha, alpha_threshold=alpha_threshold)
+  return label_upright_alpha(
+    generated,
+    alpha,
+    alpha_threshold=alpha_threshold,
+    raster_scale=raster_scale,
+  )
 
 
 def write_yolo_label(generated: GeneratedObject, output_path: Path) -> None:

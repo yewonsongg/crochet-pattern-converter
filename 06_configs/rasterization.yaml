@@ -1,0 +1,5 @@
+# Shared deterministic rasterization policy. Scene geometry and labels remain in
+# their logical coordinate systems regardless of these sampling factors.
+schema_version: 1
+scene_supersample_factor: 2
+local_label_supersample_factor: 4

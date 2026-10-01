@@ -10,8 +10,8 @@ import numpy as np
 from generation.core.models import GenerationConfig
 from generation.core.sampling import SamplingConfig
 from generation.registry import COMPOSITE_GENERATORS, GENERATOR_REGISTRY
-from labeling import format_yolo_obb_label, label_upright_png
-from rasterization import rasterize_svg
+from labeling import format_yolo_obb_label, rasterize_and_label_upright_svg
+from rasterization import rasterize_svg_supersampled
 
 from .composition import compose_scene_svg
 from .config import SceneConfiguration, parse_class_key
@@ -65,7 +65,7 @@ def generate_scene_trace(
     scene_config, sampling_config, assigned_graph, alpha_threshold,
   )
   placed_graph = _place_graph(scene_config, realized_graph)
-  rendered_scene = _render_scene(placed_graph)
+  rendered_scene = _render_scene(scene_config, placed_graph)
   return SceneTrace(
     pattern_sample, slot_graph, assigned_graph, realized_graph, placed_graph, rendered_scene,
   )
@@ -153,46 +153,120 @@ def _grid_slots(sample: PatternSample) -> SlotGraph:
   for row in range(rows):
     for column in range(columns):
       ordinal = row * columns + column
+      is_perimeter = row in (0, rows - 1) or column in (0, columns - 1)
       nodes.append(SlotNode(
         slot_id=f"cells_{row:02d}_{column:02d}",
-        role="cells",
+        role="outer_cells" if is_perimeter else "inner_cells",
         ordinal=ordinal,
         structural_position=(column - (columns - 1) / 2.0, row - (rows - 1) / 2.0),
         context={"row": row, "column": column, "rows": rows, "columns": columns},
       ))
-  edges = []
+  base_edges = []
   for row in range(rows):
     for column in range(columns):
       source = f"cells_{row:02d}_{column:02d}"
       if column + 1 < columns:
         target = f"cells_{row:02d}_{column + 1:02d}"
-        edges.append(GraphEdge(f"h_{row:02d}_{column:02d}", source, target, "horizontal_neighbor"))
+        base_edges.append(GraphEdge(f"h_{row:02d}_{column:02d}", source, target, "horizontal_neighbor"))
       if row + 1 < rows:
         target = f"cells_{row + 1:02d}_{column:02d}"
-        edges.append(GraphEdge(f"v_{row:02d}_{column:02d}", source, target, "vertical_neighbor"))
+        base_edges.append(GraphEdge(f"v_{row:02d}_{column:02d}", source, target, "vertical_neighbor"))
+  instruction_count = min(int(sample.parameters["instruction_count"]), len(base_edges))
+  rng = np.random.default_rng(derive_seed(sample.scene_seed, "grid", "interstitial_edges"))
+  selected_indices = set(
+    int(value) for value in rng.choice(len(base_edges), size=instruction_count, replace=False)
+  )
+  positions = {node.slot_id: node.structural_position for node in nodes}
+  edges = []
+  instruction_index = 0
+  for edge_index, edge in enumerate(base_edges):
+    if edge_index not in selected_indices:
+      edges.append(edge)
+      continue
+    source_position = positions[edge.source_id]
+    target_position = positions[edge.target_id]
+    midpoint = (
+      (source_position[0] + target_position[0]) / 2.0,
+      (source_position[1] + target_position[1]) / 2.0,
+    )
+    edge_angle = 0.0 if edge.relationship == "horizontal_neighbor" else 90.0
+    slot_id = f"interstitial_{instruction_index:02d}"
+    nodes.append(SlotNode(
+      slot_id=slot_id,
+      role="interstitial",
+      ordinal=rows * columns + instruction_index,
+      structural_position=midpoint,
+      context={
+        "between_source": edge.source_id,
+        "between_target": edge.target_id,
+        "replaced_edge_id": edge.edge_id,
+        "replaced_relationship": edge.relationship,
+        "edge_angle_deg": edge_angle,
+      },
+    ))
+    edges.extend((
+      GraphEdge(f"{edge.edge_id}_before", edge.source_id, slot_id, "interstitial_neighbor"),
+      GraphEdge(f"{edge.edge_id}_after", slot_id, edge.target_id, "interstitial_neighbor"),
+    ))
+    instruction_index += 1
   return SlotGraph(sample, tuple(nodes), tuple(edges))
 
 
 def _radial_slots(sample: PatternSample) -> SlotGraph:
-  count = int(sample.parameters["outer_count"])
+  ring_count = int(sample.parameters["ring_count"])
+  outer_count = int(sample.parameters["outer_count"])
   phase = float(sample.parameters["phase_deg"])
   nodes = [SlotNode("center_00", "center", 0, (0.0, 0.0), {"kind": "center"})]
-  for index in range(count):
-    angle = phase + 360.0 * index / count
-    radians = math.radians(angle)
-    nodes.append(SlotNode(
-      slot_id=f"outer_{index:03d}",
-      role="outer",
-      ordinal=index,
-      structural_position=(math.sin(radians), -math.cos(radians)),
-      context={"angle_deg": angle, "index": index, "count": count},
-    ))
+  rings: list[list[str]] = []
+  ordinal = 1
+  for ring_index in range(1, ring_count + 1):
+    radius_fraction = ring_index / ring_count
+    count = max(1, int(math.floor(outer_count * radius_fraction + 0.5)))
+    role = "ring_a" if ring_index % 2 == 1 else "ring_b"
+    ring_ids = []
+    for index in range(count):
+      angle = phase + 360.0 * index / count
+      radians = math.radians(angle)
+      slot_id = f"ring_{ring_index:02d}_{index:03d}"
+      ring_ids.append(slot_id)
+      nodes.append(SlotNode(
+        slot_id=slot_id,
+        role=role,
+        ordinal=ordinal,
+        structural_position=(
+          math.sin(radians) * radius_fraction,
+          -math.cos(radians) * radius_fraction,
+        ),
+        context={
+          "angle_deg": angle,
+          "index": index,
+          "count": count,
+          "ring_index": ring_index,
+          "ring_count": ring_count,
+          "radius_fraction": radius_fraction,
+        },
+      ))
+      ordinal += 1
+    rings.append(ring_ids)
   edges = []
-  for index in range(count):
-    source = f"outer_{index:03d}"
-    target = f"outer_{(index + 1) % count:03d}"
-    edges.append(GraphEdge(f"cycle_{index:03d}", source, target, "cycle_next"))
-    edges.append(GraphEdge(f"spoke_{index:03d}", "center_00", source, "center_to_outer"))
+  for ring_offset, ring_ids in enumerate(rings):
+    ring_index = ring_offset + 1
+    for index, source in enumerate(ring_ids):
+      target = ring_ids[(index + 1) % len(ring_ids)]
+      edges.append(GraphEdge(
+        f"cycle_{ring_index:02d}_{index:03d}", source, target, "cycle_next",
+      ))
+      if ring_offset == 0:
+        parent = "center_00"
+        relationship = "center_to_ring"
+      else:
+        inner_ids = rings[ring_offset - 1]
+        parent_index = int(math.floor(index * len(inner_ids) / len(ring_ids) + 0.5))
+        parent = inner_ids[parent_index % len(inner_ids)]
+        relationship = "adjacent_ring"
+      edges.append(GraphEdge(
+        f"radial_{ring_index:02d}_{index:03d}", parent, source, relationship,
+      ))
   return SlotGraph(sample, tuple(nodes), tuple(edges))
 
 
@@ -242,6 +316,7 @@ def _realize_nodes(
   alpha_threshold: int,
 ) -> RealizedGraph:
   settings = config.patterns["symbol_generation"]
+  raster_scale = int(config.rasterization["local_label_supersample_factor"])
   base = GenerationConfig(
     canvas_width_px=int(settings["canvas_width_px"]),
     canvas_height_px=int(settings["canvas_height_px"]),
@@ -261,8 +336,11 @@ def _realize_nodes(
     generation_config = config.symbol_metrics.config_for(assignment.class_key, base)
     spec = sampling_config.resolve(*assignment.class_key)
     generated = GENERATOR_REGISTRY[assignment.class_key](spec, generator_input, generation_config)
-    png_bytes = rasterize_svg(generated.svg)
-    label_upright_png(generated, png_bytes, alpha_threshold=alpha_threshold)
+    png_bytes = rasterize_and_label_upright_svg(
+      generated,
+      supersample_factor=raster_scale,
+      alpha_threshold=alpha_threshold,
+    )
     local_obb = tuple(tuple(map(float, point)) for point in generated.obb_pixels)
     nodes.append(RealizedNode(assignment, generated, png_bytes, generation_config, local_obb))
   return RealizedGraph(graph, tuple(nodes))
@@ -283,15 +361,20 @@ def _place_graph(config: SceneConfiguration, graph: RealizedGraph) -> PlacedGrap
         canvas_center[1] + slot.structural_position[1] * float(sample.parameters["pitch_y_px"]),
       )
     else:
-      radius = 0.0 if slot.role == "center" else float(sample.parameters["radius_px"])
+      radius = float(sample.parameters["radius_px"])
       center = (
         canvas_center[0] + slot.structural_position[0] * radius,
         canvas_center[1] + slot.structural_position[1] * radius,
       )
     orientation = pattern_definition["roles"][slot.role]["orientation"]
+    orientation_kind = orientation["kind"]
     base_angle = float(orientation.get("angle_deg", 0.0))
-    if orientation["kind"] == "radial_outward":
+    if orientation_kind == "radial_outward":
       base_angle = float(slot.context["angle_deg"]) + float(orientation.get("offset_deg", 0.0))
+    elif orientation_kind == "edge_aligned":
+      base_angle = float(slot.context["edge_angle_deg"]) + float(orientation.get("offset_deg", 0.0))
+    elif orientation_kind != "fixed":
+      raise ValueError(f"Unsupported orientation kind: {orientation_kind!r}.")
     jitter = orientation.get("jitter_deg")
     if jitter:
       base_angle += float(_sample_value(jitter, np.random.default_rng(node.assignment.pose_seed)))
@@ -330,10 +413,17 @@ def _place_graph(config: SceneConfiguration, graph: RealizedGraph) -> PlacedGrap
   return PlacedGraph(graph, tuple(placements), tuple(interactions), tuple(warnings))
 
 
-def _render_scene(graph: PlacedGraph) -> RenderedScene:
-  width, height = graph.realized_graph.assigned_graph.slot_graph.pattern.canvas_size_px
+def _render_scene(config: SceneConfiguration, graph: PlacedGraph) -> RenderedScene:
+  realized_graph = graph.realized_graph
+  assigned_graph = realized_graph.assigned_graph
+  width, height = assigned_graph.slot_graph.pattern.canvas_size_px
   svg = compose_scene_svg(graph.nodes, width, height)
-  png_bytes = rasterize_svg(svg)
+  png_bytes = rasterize_svg_supersampled(
+    svg,
+    output_width=width,
+    output_height=height,
+    supersample_factor=int(config.rasterization["scene_supersample_factor"]),
+  )
   labels, node_ids = [], []
   for placement in graph.nodes:
     labels.append(format_yolo_obb_label(
