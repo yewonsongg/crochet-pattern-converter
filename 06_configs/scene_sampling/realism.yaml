@@ -1,0 +1,27 @@
+schema_version: 1
+name: realism
+
+# Provisional placeholders. Replace these weights after auditing real charts.
+pattern_weights:
+  grid: 0.5
+  radial: 0.5
+
+class_weights:
+  stitches:
+    primitive.ch: 1.0
+    primitive.slst: 1.0
+    primitive.sc: 1.0
+    primitive.hdc: 1.0
+    primitive.dc: 1.0
+    primitive.tr: 1.0
+    primitive.dtr: 1.0
+    compound.together: 1.0
+    compound.increase: 1.0
+    compound.post: 1.0
+    compound.crossed: 1.0
+    compound.rounded: 1.0
+    compound.ch3picot: 1.0
+  radial_center:
+    instructive.ring: 1.0
+    instructive.loop: 1.0
+    instructive.jb: 1.0

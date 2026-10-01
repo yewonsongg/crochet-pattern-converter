@@ -1,0 +1,88 @@
+# Preliminary v1 scene-graph rules. Values are visual defaults, not measured
+# crochet-chart frequencies. Exposure/realism profiles will select patterns
+# and weight eligible classes without changing these geometry rules.
+schema_version: 1
+
+canvas:
+  width_px: 1280
+  height_px: 1280
+
+# One chart scale applies to each symbol's visible size.
+# Effective target_visible_px = reference_visible_px * chart_scale *
+# relative_size from ../symbol_metrics.yaml. The local canvas stays fixed.
+symbol_generation:
+  canvas_width_px: 150
+  canvas_height_px: 150
+  reference_visible_px: 80.0
+  chart_scale:
+    distribution: truncated_normal
+    mean: 1.0
+    std: 0.05
+    min: 0.9
+    max: 1.1
+
+# Pools define eligibility only; profile files will supply selection weights.
+class_pools:
+  stitches:
+    - primitive.ch
+    - primitive.slst
+    - primitive.sc
+    - primitive.hdc
+    - primitive.dc
+    - primitive.tr
+    - primitive.dtr
+    - compound.together
+    - compound.increase
+    - compound.post
+    - compound.crossed
+    - compound.rounded
+    - compound.ch3picot
+  radial_center:
+    - instructive.ring
+    - instructive.loop
+    - instructive.jb
+
+patterns:
+  grid:
+    parameters:
+      rows: {distribution: integer_uniform, min: 4, max: 8}
+      columns: {distribution: integer_uniform, min: 4, max: 8}
+      pitch_x_px: {distribution: uniform, min: 110.0, max: 135.0}
+      pitch_y_px: {distribution: uniform, min: 110.0, max: 135.0}
+    roles:
+      cells:
+        count: {kind: grid_product, rows: rows, columns: columns}
+        class_pool: stitches
+        layout: {kind: centered_grid}
+        orientation:
+          kind: fixed
+          angle_deg: 0.0
+          jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
+    edges:
+      - {kind: horizontal_neighbor, role: cells}
+      - {kind: vertical_neighbor, role: cells}
+
+  radial:
+    parameters:
+      outer_count: {distribution: integer_uniform, min: 8, max: 16}
+      radius_px: {distribution: uniform, min: 270.0, max: 430.0}
+      phase_deg: {distribution: uniform, min: 0.0, max: 360.0}
+    roles:
+      center:
+        count: {kind: fixed, value: 1}
+        class_pool: radial_center
+        layout: {kind: center}
+        orientation: {kind: fixed, angle_deg: 0.0}
+      outer:
+        count: {kind: parameter, name: outer_count}
+        class_pool: stitches
+        layout: {kind: circular_ring, radius: radius_px, phase: phase_deg}
+        orientation:
+          kind: radial_outward
+          zero_direction: top
+          positive_direction: clockwise
+          offset_deg: 0.0
+          jitter_deg: {distribution: uniform, min: -4.0, max: 4.0}
+    edges:
+      - {kind: cycle_next, role: outer}
+      - {kind: center_to_outer, center_role: center, outer_role: outer}

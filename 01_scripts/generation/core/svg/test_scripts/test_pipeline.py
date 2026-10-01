@@ -96,10 +96,10 @@ def main() -> None:
   generator = GENERATOR_REGISTRY[("primitive", "dc")]
   sample = config.sample(
     "primitive", "dc", np.random.default_rng(5000), seed=5000,
-    overrides={"bar_stem_ratio": 0.333, "cross_bar_ratio": 0.36, "cross_bar_y": 0.50, "cross_bar_angle_deg": 15.0},
+    overrides={"bar_stem_ratio": 0.333, "cross_bar_ratio": 0.30, "cross_bar_y": 0.50, "cross_bar_angle_deg": 15.0},
   )
   generated = generator(spec, sample, GenerationConfig())
-  assert generated.metadata["cross_bar_ratio"] == 0.36
+  assert generated.metadata["cross_bar_ratio"] == 0.30
   assert generated.metadata["cross_bar_y"] == 0.50
   assert generated.metadata["cross_bar_angle_deg"] == 15.0
   assert generated.svg.count("<line") == 3
@@ -114,7 +114,7 @@ def main() -> None:
       "primitive", class_name, np.random.default_rng(seed), seed=seed,
       overrides={
         "bar_stem_ratio": 0.333,
-        "cross_bar_ratio": 0.36,
+        "cross_bar_ratio": 0.30,
         "cross_bar_y": 0.50,
         "cross_bar_angle_deg": -10.0,
       },
